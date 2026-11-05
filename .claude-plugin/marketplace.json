@@ -1,0 +1,26 @@
+{
+  "name": "ebuka-skills",
+  "owner": {
+    "name": "ebuka-odih"
+  },
+  "metadata": {
+    "description": "Personal engineering standards as Claude Code skills, grouped by domain. Install once, follow in every project.",
+    "version": "0.3.0"
+  },
+  "plugins": [
+    {
+      "name": "agent-ops",
+      "source": "./plugins/agent-ops",
+      "description": "Logs every agent action to .agent-log/, writes a goal contract before work, and blocks 'done' until each acceptance criterion has evidence.",
+      "version": "0.1.0",
+      "category": "development"
+    },
+    {
+      "name": "architecture",
+      "source": "./plugins/architecture",
+      "description": "System design: repo and service shape, auth, data, APIs, ADRs. Writes docs/architecture/ARCHITECTURE.md, the contract every other plugin reads.",
+      "version": "0.2.1",
+      "category": "development"
+    }
+  ]
+}

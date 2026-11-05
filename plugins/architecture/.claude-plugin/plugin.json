@@ -1,0 +1,17 @@
+{
+  "name": "architecture",
+  "version": "0.2.1",
+  "description": "System design skills: system-design (orchestrator), repo-and-services, auth-design, data-design, api-design, adr. Produces docs/architecture/ARCHITECTURE.md and ADRs.",
+  "author": {
+    "name": "ebuka-odih"
+  },
+  "keywords": [
+    "architecture",
+    "system-design",
+    "monorepo",
+    "microservices",
+    "auth",
+    "adr"
+  ],
+  "license": "MIT"
+}
