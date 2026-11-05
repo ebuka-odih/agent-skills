@@ -1,0 +1,8 @@
+{
+  "description": "security: deny writing real-looking secrets (private keys, live API keys, cloud and VCS tokens) into files git would track; gitignored .env files are allowed.",
+  "hooks": {
+    "PreToolUse": [
+      { "matcher": "Write|Edit|MultiEdit", "hooks": [ { "type": "command", "command": "bash", "args": ["${CLAUDE_PLUGIN_ROOT}/scripts/secret-guard.sh"], "timeout": 10 } ] }
+    ]
+  }
+}

@@ -2,6 +2,14 @@
 
 Each domain is one plugin. Each line under it is one skill. Orchestrator first.
 
+## ✅ security (0.1)
+- `security-baseline` — orchestrator: checklist → SECURITY.md, routing
+- `secure-coding` — OWASP-mapped rules for Laravel / FastAPI / React
+- `threat-model` — STRIDE-lite per feature with proofs
+- `secrets-and-deps` — secret handling, leak response, dependency audits
+- `security-audit` — full audits via Cloudflare security-audit skill
+- Next: security headers / CSP templates per stack; CI templates for dependency audit + gitleaks
+
 ## ✅ code-standards (0.1)
 - `writing-code` — orchestrator: read rules → copy pattern → test → code → format/lint/types/tests → leftover scan
 - `structure-and-naming` — placement, naming per stack, size limits
@@ -48,13 +56,7 @@ Each domain is one plugin. Each line under it is one skill. Orchestrator first.
 - `api-design` — style, conventions, versioning, webhooks
 - `adr` — write and supersede decision records
 
-## ⏭ security (next)
-- `security-baseline` — orchestrator: the minimum every project ships with
-- `secure-coding` — input validation, output encoding, secrets, dependency hygiene
-- `threat-model` — STRIDE-lite per feature
-- `security-audit` — delegate to Cloudflare's `security-audit` (see UPSTREAM.md) for full audits; add house rules on top
-
-## devops
+## ⏭ devops (next)
 - `delivery-pipeline` — orchestrator: CI → preview → staging → production
 - `ci` — required checks, caching, affected-only builds
 - `environments-and-secrets` — env parity, config, secret stores

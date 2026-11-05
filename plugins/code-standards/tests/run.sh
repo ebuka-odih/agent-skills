@@ -55,6 +55,8 @@ check "debugger"                 's src/a.ts "  debugger;" | grep -q debug'
 check "secret"                   's app/x.py "KEY = \"sk-abcdefghijklmnop1234\"" | grep -q secret'
 check "local path"               's app/x.py "p = \"/Users/alex/project/data.csv\"" | grep -q local-path'
 check "TODO without ticket"      's app/x.py "# TODO fix later" | grep -q todo-without-ticket'
+check "XXXX placeholder not a TODO"  '[ -z "$(s app/x.sh "RE=\"xxxx|XXXX|changeme\"")" ]'
+check "XXX marker flagged"           's app/x.py "# XXX hack" | grep -q todo-without-ticket'
 check "TODO(T7) ok"              '[ -z "$(s app/x.py "# TODO(T7): handle refunds")" ]'
 check "clean code → no output"   '[ -z "$(s app/x.py "def ok(): return 1")" ]'
 

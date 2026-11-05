@@ -3,3 +3,6 @@
 **/evals/results/
 *.bak
 .agent-log/
+.env
+.env.*
+!.env.example

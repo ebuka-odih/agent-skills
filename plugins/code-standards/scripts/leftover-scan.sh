@@ -23,7 +23,8 @@ scan_text() { # path, reads text on stdin with "lineno<TAB>text" lines
       if (debug != "" && t ~ debug && !(is_test && t ~ /print\(/)) print path ":" n ": debug: " t
       if (t ~ /sk-[A-Za-z0-9_-]{16,}|gh[pousr]_[A-Za-z0-9]{20,}|AKIA[A-Z0-9]{12,}|xox[abpr]-[A-Za-z0-9-]{10,}|-----BEGIN [A-Z ]*PRIVATE KEY/) print path ":" n ": secret: " t
       if (t ~ /\/Users\/[a-z][a-z0-9._-]+\/|\/home\/[a-z][a-z0-9._-]+\/|C:\\Users\\/) print path ":" n ": local-path: " t
-      if (t ~ /(TODO|FIXME|XXX)/ && t !~ /(TODO|FIXME|XXX)[(: ]*(T[0-9]+|#[0-9]+|[A-Z][A-Z0-9]+-[0-9]+)/) print path ":" n ": todo-without-ticket: " t
+      # whole-word markers only (XXXX placeholders, TODOS etc. are not markers)
+      if (t ~ /(^|[^A-Za-z])(TODO|FIXME|XXX)([^A-Za-z]|$)/ && t !~ /(TODO|FIXME|XXX)[(: ]*(T[0-9]+|#[0-9]+|[A-Z][A-Z0-9]+-[0-9]+)/) print path ":" n ": todo-without-ticket: " t
     }'
 }
 

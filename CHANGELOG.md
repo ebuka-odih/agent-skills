@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.8.0 — 2026-11-05
+- New plugin `security` 0.1.0: `security-baseline`, `secure-coding`, `threat-model`, `secrets-and-deps`, `security-audit` (Cloudflare delegate); secret guard hook; `security-scan.sh`; 24 script tests; 4 eval cases.
+- `code-standards` 0.1.1: TODO/FIXME/XXX matched as whole words only (XXXX placeholders were false positives).
+
 ## 0.7.0 — 2026-11-05
 - New plugin `code-standards` 0.1.0: `writing-code`, `structure-and-naming`, `error-handling`, `testing`, `refactoring`; `project-commands.sh`, `leftover-scan.sh`, PostToolUse leftover hook; 35 script tests; 3 eval cases.
 

@@ -4,7 +4,7 @@ Third-party skills we install alongside ours or learn from. Vet before adding: r
 
 | Skill | Source | License | Used for | Status |
 |---|---|---|---|---|
-| `security-audit` | [cloudflare/security-audit-skill](https://github.com/cloudflare/security-audit-skill) | MIT | Full multi-phase security audits with verified, machine-readable findings. Our `security` plugin will delegate full audits to it. | Reviewed SKILL.md 2026-11-05 · not yet installed |
+| `security-audit` | [cloudflare/security-audit-skill](https://github.com/cloudflare/security-audit-skill) | MIT | Full multi-phase security audits with verified, machine-readable findings. The `security` plugin's `security-audit` skill delegates full audits to it. | Reviewed SKILL.md + README 2026-11-05 · installed per machine on request |
 
 ## cloudflare/security-audit-skill — notes
 - One skill, `skills/security-audit/`, split into topic files (`WEB-PROTOCOL-AND-AUTH.md`, `SUPPLY-CHAIN-AND-RELEASE.md`, `CLOUD-AND-DEPLOYMENT.md`, …) plus a JSON report schema and two Node validators.

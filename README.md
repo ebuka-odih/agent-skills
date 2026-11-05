@@ -12,6 +12,7 @@ claude plugin install architecture@ebuka-skills
 claude plugin install ai-engineering@ebuka-skills
 claude plugin install collaboration@ebuka-skills
 claude plugin install code-standards@ebuka-skills
+claude plugin install security@ebuka-skills
 ```
 
 Working on the skills from a local clone? Run `claude plugin marketplace add ./` from the repo root instead.
@@ -65,7 +66,7 @@ flowchart LR
 | `ai-engineering` | ✅ 0.1 | `ai-design` (orchestrator) · `ai-feature` · `ai-stack` · `ai-evals` · `ai-safety` · `ai-ops` · `ai-learnings` + session-start drift hook |
 | `architecture` | ✅ 0.2 | `system-design` (orchestrator) · `repo-and-services` · `auth-design` · `data-design` · `api-design` · `adr` |
 | `code-standards` | ✅ 0.1 | `writing-code` (orchestrator) · `structure-and-naming` · `error-handling` · `testing` · `refactoring` + leftover-scan hook |
-| `security` | planned | builds on [Cloudflare's security-audit skill](UPSTREAM.md) |
+| `security` | ✅ 0.1 | `security-baseline` (orchestrator) · `secure-coding` · `threat-model` · `secrets-and-deps` · `security-audit` (→ [Cloudflare's skill](UPSTREAM.md)) + secret guard hook |
 | `devops` | planned | |
 | `collaboration` | ✅ 0.1 | `git-workflow` (orchestrator) · `commits` · `pull-requests` · `code-review` · `repo-setup` + git guard hook |
 
@@ -100,6 +101,16 @@ House defaults live in [`plugins/architecture/skills/system-design/references/de
 4. **`ai-evals` · `ai-safety` · `ai-ops`** cover golden sets that gate merges, prompt-injection and tool-permission controls, and a usage row plus a budget alert for every call.
 5. **`ai-learnings`** is the loop. Eval results, incidents, model swaps and spec changes become `LEARNINGS.md` entries, each with an action. Lessons seen across projects are promoted (with your approval) into `house-defaults.md`, which every new project reads first. The first defaults were seeded from two real projects (FastAPI + Pydantic AI).
 6. **Session-start hook** flags AI projects with no AI.md, spec changes since the AI design, features with no card or eval set, and lessons waiting to be promoted.
+
+## What `security` does — baseline, reviews, threat models, audits
+
+- **`security-baseline`** walks a checklist (identity, input/output, transport, secrets and deps, data, AI, operations). Each control is marked in place (with evidence), N/A, or a gap with severity and owner, and recorded in `docs/security/SECURITY.md`.
+- **`secure-coding`** maps OWASP checks to rules for Laravel, FastAPI and React. Findings are reported as `file:line · class · exploit in one sentence · fix`, and every fix gets a regression test.
+- **`threat-model`** is STRIDE-lite per feature: data flow, trust boundaries, assets, and threats → mitigations, each with a test, written to `docs/security/threats/<feature>.md`.
+- **`secrets-and-deps`** covers where secrets live, how to respond to a leak (rotate first), and dependency audits (`composer audit`, `pip-audit`, `npm audit`).
+- **`security-audit`** hands full audits to [Cloudflare's security-audit skill](https://github.com/cloudflare/security-audit-skill). It asks before installing, keeps output outside the repo, and folds confirmed findings into SECURITY.md and PLAN.md.
+- **`security-scan.sh`** checks for tracked `.env` files and key-shaped strings in tracked files (values never printed), checks `.gitignore`, and lists audit commands per folder.
+- **Secret guard hook** blocks writing private keys or live provider keys (Stripe, AWS, GitHub, Anthropic, OpenAI, Slack, Google) into any file git would track. Gitignored `.env` files are allowed.
 
 ## What `code-standards` does — every change, the same loop
 
@@ -149,7 +160,7 @@ Two layers. Both must pass before bumping a version.
 
 | Layer | What it proves | Run |
 |---|---|---|
-| Script tests | Hooks log correctly, redact secrets, gate blocks/releases; plan parsing, ready logic, traceability | `bash plugins/agent-ops/tests/run.sh` · `bash plugins/product/tests/run.sh` · `bash plugins/ai-engineering/tests/run.sh` · `bash plugins/collaboration/tests/run.sh` · `bash plugins/code-standards/tests/run.sh` |
+| Script tests | Hooks log correctly, redact secrets, gate blocks/releases; plan parsing, ready logic, traceability | `bash plugins/agent-ops/tests/run.sh` · `bash plugins/product/tests/run.sh` · `bash plugins/ai-engineering/tests/run.sh` · `bash plugins/collaboration/tests/run.sh` · `bash plugins/code-standards/tests/run.sh` · `bash plugins/security/tests/run.sh` |
 | Skill evals | A real agent with the plugin does what SKILL.md promises, compared with the same agent without it | `cd plugins/<domain> && claude plugin eval . --allow-tools Write Edit Bash --no-publish` |
 
 ### Latest results — 2026-11-05 (Claude Opus 5.5)
@@ -160,6 +171,10 @@ Two layers. Both must pass before bumping a version.
 | collaboration · branch-for-task | **1.0** | 0.0 | Next ready task on `feat/T4-<slug>` |
 | collaboration · commit-message | 1.0 | 1.0 | Stages only task files, Conventional subject, Refs: T4/R3 |
 | collaboration · pr-description | 1.0 | 1.0 | Body from task + requirement + goal evidence, honest Not done |
+| security · audit-delegation | **1.0** | 0.4 | Routes to Cloudflare's skill, asks before installing, output outside repo |
+| security · secret-to-config | **1.0** | 0.78 | Key into gitignored .env + `env()`, never code; tells you to rotate |
+| security · review-idor-sqli | 1.0 | 1.0 | IDOR, SQL injection, mass assignment, unverified webhook |
+| security · threat-model-feature | 1.0 | 1.0 | Webhook spoofing/replay, upload abuse, tenant isolation, with proofs |
 | code-standards · feature-in-place | 1.0 | 1.0 | Pure service in the right module, boundary tests, no leftovers |
 | code-standards · error-handling-fix | 1.0 | 1.0 | Finds swallowed errors, no timeout, unsafe retries, PII in logs |
 | code-standards · boundary-tests | 1.0 | 1.0 | Exact-cutoff, naive-datetime and rounding tests, fixed clock |
