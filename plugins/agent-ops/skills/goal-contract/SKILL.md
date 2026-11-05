@@ -10,6 +10,7 @@ Write down what "done" means **before** doing the work, in terms a command or a 
 ## Steps
 1. If `.agent-log/GOAL.md` exists with `status: active` and a different goal: move it to `.agent-log/goals/<YYYY-MM-DD>-<slug>.md` with `status: abandoned` or `superseded`, and tell the user.
 2. Copy [templates/GOAL.md](templates/GOAL.md) to `.agent-log/GOAL.md`.
+   - Project has `docs/plan/PLAN.md` → the goal is one plan task. Set `task:` and `covers:`, and copy each covered requirement's `accept:` line from `docs/spec/SPEC.md` into the criteria. Work that isn't in the plan gets added as a task first (`next-task` skill).
 3. **Goal:** the user's words, quoted. Then one line restating it in your words.
 4. **Acceptance criteria:** 2–7 lines. Each one:
    - starts with an ID (`C1`, `C2`…)

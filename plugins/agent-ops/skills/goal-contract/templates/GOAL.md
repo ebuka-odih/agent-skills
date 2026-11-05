@@ -2,6 +2,8 @@
 status: active
 created: YYYY-MM-DDTHH:MM
 session: <session id if known>
+task: <T7 from docs/plan/PLAN.md, or "-" if the project has no plan>
+covers: <R7 — requirement IDs from docs/spec/SPEC.md, or "-">
 ---
 
 # Goal

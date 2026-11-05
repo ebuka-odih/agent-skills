@@ -1,0 +1,8 @@
+{
+  "description": "product: at session start, tell the agent the active milestone, in-progress and next ready task from docs/plan/PLAN.md.",
+  "hooks": {
+    "SessionStart": [
+      { "hooks": [ { "type": "command", "command": "bash", "args": ["${CLAUDE_PLUGIN_ROOT}/scripts/plan-context.sh"], "timeout": 10 } ] }
+    ]
+  }
+}

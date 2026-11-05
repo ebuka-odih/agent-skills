@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.4.0 — 2026-11-05
+- New plugin `product` 0.1.0: `product`, `product-spec`, `project-plan`, `next-task`; SessionStart hook with project status; `trace.sh` traceability; 29 script tests; 4 eval cases.
+- `agent-ops` 0.1.1: GOAL.md links to a plan task (`task:`, `covers:`); verify-done updates PLAN.md.
+- `architecture` 0.2.2: system-design reads SPEC.md before asking drivers.
+
 ## 0.3.0 — 2026-11-05
 - New plugin `agent-ops` 0.1.0: session logging hooks, done-gate Stop hook, skills `agent-ops`, `goal-contract`, `verify-done`, `session-report`.
 - Hook script tests: `plugins/agent-ops/tests/run.sh` (29 checks).

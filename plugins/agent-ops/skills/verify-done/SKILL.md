@@ -21,6 +21,7 @@ Your memory of doing the work is not evidence. Re-check now.
    - `done` — every criterion `[x]`
    - `partial` — any `[ ]`, `[~]` or BLOCKED remain
 7. Move the file to `.agent-log/goals/<YYYY-MM-DD>-<slug>.md` when status is `done` or `partial`.
+8. If GOAL.md has `task:` and the project has `docs/plan/PLAN.md`: set that task to `[x]` (done), `[!] — <reason>` (blocked) or leave `[~]` (partial), and append a Progress log line pointing at the goal file. Requirement and milestone updates follow the `next-task` skill, step 4.
 
 ## Final message format
 ```

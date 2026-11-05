@@ -6,6 +6,7 @@ My engineering standards, written as Claude Code skills. Every project I start i
 
 ```bash
 claude plugin marketplace add ebuka-odih/agent-skills
+claude plugin install product@ebuka-skills
 claude plugin install agent-ops@ebuka-skills
 claude plugin install architecture@ebuka-skills
 ```
@@ -38,7 +39,12 @@ Each domain has an **orchestrator** skill that runs the whole flow and hands dee
 
 ```mermaid
 flowchart LR
+  P[product] -->|writes| SP[(docs/spec/SPEC.md)]
+  SP --> A
   A[architecture] -->|writes| D[(docs/architecture/ARCHITECTURE.md + ADRs)]
+  SP --> PL[(docs/plan/PLAN.md)]
+  D --> PL
+  PL --> AO[agent-ops<br/>GOAL.md per task]
   D --> C[code-standards]
   D --> S[security]
   D --> O[devops]
@@ -49,6 +55,7 @@ flowchart LR
 
 | Plugin | Status | Skills |
 |---|---|---|
+| `product` | ✅ 0.1 | `product` (orchestrator) · `product-spec` · `project-plan` · `next-task` + session-start hook |
 | `agent-ops` | ✅ 0.1 | `agent-ops` (orchestrator) · `goal-contract` · `verify-done` · `session-report` + logging and done-gate hooks |
 | `architecture` | ✅ 0.2 | `system-design` (orchestrator) · `repo-and-services` · `auth-design` · `data-design` · `api-design` · `adr` |
 | `code-standards` | planned | see [ROADMAP.md](ROADMAP.md) |
@@ -64,6 +71,20 @@ flowchart LR
 4. Later, in **Check** mode, reviews a PR against the doc and flags boundary violations with file:line.
 
 House defaults live in [`plugins/architecture/skills/system-design/references/defaults.md`](plugins/architecture/skills/system-design/references/defaults.md). Edit that file to change what gets recommended.
+
+## What `product` does — long projects, one task at a time
+
+| | Spec | Plan | Goal |
+|---|---|---|---|
+| File | `docs/spec/SPEC.md` | `docs/plan/PLAN.md` | `.agent-log/GOAL.md` |
+| Answers | What, for whom, what not | In what order | This task's checkable outcome |
+| Lives | Whole project | Whole project, updated every task | One task |
+
+1. **`product-spec`** interviews you in 3 short rounds (problem & users → journeys → limits). Each question comes with a proposed answer. It writes requirements `R1…` with priority and an `accept:` check, plus non-goals. Changes go through a change log.
+2. **`project-plan`** cuts the spec into vertical-slice milestones (each one demoable) and small tasks: `- [ ] T7 · Cancel booking · covers: R7 · depends: T5 · size: M`.
+3. **`next-task`** picks the first ready task, opens a GOAL.md linked to it (`task: T7`, `covers: R7`), builds it, verifies it, then ticks the task and writes a progress-log line.
+4. **Session-start hook** tells every new session the active milestone, the task in progress, the next ready task and blockers, so no session starts from zero.
+5. **`trace.sh`** reports project status and requirements with no task, tasks covering nothing, and tasks pointing at unknown requirements.
 
 ## What `agent-ops` does in a project — closing the "said done ≠ actually done" gap
 
@@ -90,7 +111,7 @@ Two layers. Both must pass before bumping a version.
 
 | Layer | What it proves | Run |
 |---|---|---|
-| Script tests | Hooks log correctly, redact secrets, gate blocks/releases | `bash plugins/agent-ops/tests/run.sh` |
+| Script tests | Hooks log correctly, redact secrets, gate blocks/releases; plan parsing, ready logic, traceability | `bash plugins/agent-ops/tests/run.sh` · `bash plugins/product/tests/run.sh` |
 | Skill evals | A real agent with the plugin does what SKILL.md promises, compared with the same agent without it | `cd plugins/<domain> && claude plugin eval . --allow-tools Write Edit Bash --no-publish` |
 
 ### Latest results — 2026-11-05 (Claude Opus 5.5)

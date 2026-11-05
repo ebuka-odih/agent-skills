@@ -1,0 +1,10 @@
+{
+  "name": "product",
+  "version": "0.1.0",
+  "description": "Spec-driven long projects: interview the user into SPEC.md (numbered requirements), slice it into PLAN.md milestones and tasks traced to requirements, then build one task at a time and resume across sessions.",
+  "author": {
+    "name": "ebuka-odih"
+  },
+  "license": "MIT",
+  "keywords": ["spec", "requirements", "planning", "roadmap", "traceability"]
+}

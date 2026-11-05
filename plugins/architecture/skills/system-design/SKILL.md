@@ -38,7 +38,9 @@ Read [references/defaults.md](references/defaults.md). It overrides generic advi
 
 ## 3. Gather the drivers
 
-Follow [references/drivers.md](references/drivers.md). One batch of at most 6 questions, each with a default answer. Don't decide anything until drivers are known.
+Read `docs/spec/SPEC.md` first if it exists: users, journeys, requirements (R…/NFR…), constraints and non-goals are drivers already answered — don't ask them again, and cite requirement IDs in decisions ("Postgres RLS — NFR3 tenant isolation"). No spec and the user is starting a real project → suggest the `product-spec` skill first; continue without it only if they say so.
+
+Then follow [references/drivers.md](references/drivers.md) for what's still unknown. One batch of at most 6 questions, each with a default answer. Don't decide anything until drivers are known.
 
 ## 4. Walk the decision areas, in order
 
