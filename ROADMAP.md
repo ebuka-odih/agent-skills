@@ -2,6 +2,14 @@
 
 Each domain is one plugin. Each line under it is one skill. Orchestrator first.
 
+## ✅ code-standards (0.1)
+- `writing-code` — orchestrator: read rules → copy pattern → test → code → format/lint/types/tests → leftover scan
+- `structure-and-naming` — placement, naming per stack, size limits
+- `error-handling` — edge/inside/outside layers, status mapping, retry rules
+- `testing` — levels, cases from acceptance criteria, fakes, stack examples
+- `refactoring` — characterization tests, safe moves, strangler
+- Next: per-stack linter config templates (pint.json, ruff.toml, eslint) and arch-test templates
+
 ## ✅ collaboration (0.1)
 - `git-workflow` — orchestrator: lifecycle + hard rules
 - `commits` — Conventional Commits, atomic, never-commit list
@@ -40,14 +48,7 @@ Each domain is one plugin. Each line under it is one skill. Orchestrator first.
 - `api-design` — style, conventions, versioning, webhooks
 - `adr` — write and supersede decision records
 
-## ⏭ code-standards (next)
-- `writing-code` — orchestrator: read ARCHITECTURE.md, place code in the right module, follow conventions
-- `naming-and-structure` — files, folders, naming per stack
-- `error-handling` — errors, logging, retries at code level
-- `testing` — what to test, test pyramid, fixtures, coverage gates
-- `refactoring` — safe refactor steps, when to stop
-
-## security
+## ⏭ security (next)
 - `security-baseline` — orchestrator: the minimum every project ships with
 - `secure-coding` — input validation, output encoding, secrets, dependency hygiene
 - `threat-model` — STRIDE-lite per feature

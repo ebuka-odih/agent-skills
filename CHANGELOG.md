@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.7.0 — 2026-11-05
+- New plugin `code-standards` 0.1.0: `writing-code`, `structure-and-naming`, `error-handling`, `testing`, `refactoring`; `project-commands.sh`, `leftover-scan.sh`, PostToolUse leftover hook; 35 script tests; 3 eval cases.
+
 ## 0.6.0 — 2026-11-05
 - New plugin `collaboration` 0.1.0: `git-workflow`, `commits`, `pull-requests`, `code-review`, `repo-setup`; PreToolUse git guard; `pr-prep.sh`; 31 script tests; 4 eval cases.
 

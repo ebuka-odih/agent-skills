@@ -1,0 +1,8 @@
+{
+  "description": "code-standards: after each Edit/Write, flag debug leftovers, secrets, local paths and untracked TODOs in the new code (non-blocking).",
+  "hooks": {
+    "PostToolUse": [
+      { "matcher": "Edit|Write|MultiEdit", "hooks": [ { "type": "command", "command": "bash", "args": ["${CLAUDE_PLUGIN_ROOT}/scripts/leftover-hook.sh"], "timeout": 10 } ] }
+    ]
+  }
+}

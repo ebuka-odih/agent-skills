@@ -1,0 +1,10 @@
+{
+  "name": "code-standards",
+  "version": "0.1.0",
+  "description": "How code is written in every project: placed by ARCHITECTURE.md, named and structured consistently, errors at the right layer, tested, refactored safely — Laravel, FastAPI, TypeScript/React — with project-command detection and a debug-leftover check.",
+  "author": {
+    "name": "ebuka-odih"
+  },
+  "license": "MIT",
+  "keywords": ["code-quality", "testing", "error-handling", "refactoring", "laravel", "fastapi", "typescript", "react"]
+}

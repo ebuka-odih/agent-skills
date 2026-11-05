@@ -11,6 +11,7 @@ claude plugin install agent-ops@ebuka-skills
 claude plugin install architecture@ebuka-skills
 claude plugin install ai-engineering@ebuka-skills
 claude plugin install collaboration@ebuka-skills
+claude plugin install code-standards@ebuka-skills
 ```
 
 Working on the skills from a local clone? Run `claude plugin marketplace add ./` from the repo root instead.
@@ -63,7 +64,7 @@ flowchart LR
 | `agent-ops` | ✅ 0.1 | `agent-ops` (orchestrator) · `goal-contract` · `verify-done` · `session-report` + logging and done-gate hooks |
 | `ai-engineering` | ✅ 0.1 | `ai-design` (orchestrator) · `ai-feature` · `ai-stack` · `ai-evals` · `ai-safety` · `ai-ops` · `ai-learnings` + session-start drift hook |
 | `architecture` | ✅ 0.2 | `system-design` (orchestrator) · `repo-and-services` · `auth-design` · `data-design` · `api-design` · `adr` |
-| `code-standards` | planned | see [ROADMAP.md](ROADMAP.md) |
+| `code-standards` | ✅ 0.1 | `writing-code` (orchestrator) · `structure-and-naming` · `error-handling` · `testing` · `refactoring` + leftover-scan hook |
 | `security` | planned | builds on [Cloudflare's security-audit skill](UPSTREAM.md) |
 | `devops` | planned | |
 | `collaboration` | ✅ 0.1 | `git-workflow` (orchestrator) · `commits` · `pull-requests` · `code-review` · `repo-setup` + git guard hook |
@@ -99,6 +100,15 @@ House defaults live in [`plugins/architecture/skills/system-design/references/de
 4. **`ai-evals` · `ai-safety` · `ai-ops`** cover golden sets that gate merges, prompt-injection and tool-permission controls, and a usage row plus a budget alert for every call.
 5. **`ai-learnings`** is the loop. Eval results, incidents, model swaps and spec changes become `LEARNINGS.md` entries, each with an action. Lessons seen across projects are promoted (with your approval) into `house-defaults.md`, which every new project reads first. The first defaults were seeded from two real projects (FastAPI + Pydantic AI).
 6. **Session-start hook** flags AI projects with no AI.md, spec changes since the AI design, features with no card or eval set, and lessons waiting to be promoted.
+
+## What `code-standards` does — every change, the same loop
+
+1. **Read the rules first**: the PLAN task and its spec `accept:` lines, the ARCHITECTURE.md module rules, AI.md before any model call, and AGENTS.md overrides.
+2. **Copy the existing pattern.** It finds 1–2 similar features and follows their shape.
+3. **`project-commands.sh`** detects the real format, lint, type and test commands per folder (Pint/PHPStan/Pest, Ruff/mypy/pytest with uv or poetry, Prettier/ESLint/tsc/Vitest with pnpm/yarn/npm).
+4. **Tests are written with the change** (`testing`), **errors are handled at the right layer** (`error-handling`), and code is **named and placed** by `structure-and-naming`. Stack guides cover Laravel, FastAPI and TypeScript/React.
+5. **`leftover-scan.sh`** plus a non-blocking hook flag `dd()`, `print()`, `breakpoint()`, `console.log`, `debugger`, secrets, `/Users/...` paths and TODOs with no ticket, in **new lines only**.
+6. **`refactoring`** works as characterization tests → small moves → tests green after each → a separate PR.
 
 ## What `collaboration` does — branches, commits, PRs, reviews
 
@@ -139,7 +149,7 @@ Two layers. Both must pass before bumping a version.
 
 | Layer | What it proves | Run |
 |---|---|---|
-| Script tests | Hooks log correctly, redact secrets, gate blocks/releases; plan parsing, ready logic, traceability | `bash plugins/agent-ops/tests/run.sh` · `bash plugins/product/tests/run.sh` · `bash plugins/ai-engineering/tests/run.sh` · `bash plugins/collaboration/tests/run.sh` |
+| Script tests | Hooks log correctly, redact secrets, gate blocks/releases; plan parsing, ready logic, traceability | `bash plugins/agent-ops/tests/run.sh` · `bash plugins/product/tests/run.sh` · `bash plugins/ai-engineering/tests/run.sh` · `bash plugins/collaboration/tests/run.sh` · `bash plugins/code-standards/tests/run.sh` |
 | Skill evals | A real agent with the plugin does what SKILL.md promises, compared with the same agent without it | `cd plugins/<domain> && claude plugin eval . --allow-tools Write Edit Bash --no-publish` |
 
 ### Latest results — 2026-11-05 (Claude Opus 5.5)
@@ -150,6 +160,9 @@ Two layers. Both must pass before bumping a version.
 | collaboration · branch-for-task | **1.0** | 0.0 | Next ready task on `feat/T4-<slug>` |
 | collaboration · commit-message | 1.0 | 1.0 | Stages only task files, Conventional subject, Refs: T4/R3 |
 | collaboration · pr-description | 1.0 | 1.0 | Body from task + requirement + goal evidence, honest Not done |
+| code-standards · feature-in-place | 1.0 | 1.0 | Pure service in the right module, boundary tests, no leftovers |
+| code-standards · error-handling-fix | 1.0 | 1.0 | Finds swallowed errors, no timeout, unsafe retries, PII in logs |
+| code-standards · boundary-tests | 1.0 | 1.0 | Exact-cutoff, naive-datetime and rounding tests, fixed clock |
 | ai-engineering · design-from-spec | **1.0** | 0.0 | AI.md + feature cards: tiers, non-AI fallbacks, eval gates, injection + grounding, owner review |
 | ai-engineering · laravel-structured | **1.0** | 0.0 | Correct Laravel AI SDK structured agent, failover, `fake()` tests |
 | ai-engineering · discovery-asks | **1.0** | 0.25 | Batched discovery questions with proposals before designing |
@@ -164,7 +177,7 @@ Two layers. Both must pass before bumping a version.
 | architecture · microservices-pushback | 1.0 | 1.0 | Recommends modular monolith for a 2-person team |
 | architecture · auth-question | 1.0 | 1.0 | Per-client auth advice (skill did not fire — model answered directly) |
 
-Where both arms score 1.0, the base model already knows the general advice. The collaboration git cases grade the commands the agent runs *or proposes*, because the eval sandbox on macOS blocks `git` itself. The git guard hook's behaviour is covered by script tests instead. Next step for those cases: test house-specific rules from `defaults.md` that a model without the plugin can't guess.
+Where both arms score 1.0, the base model already knows the general advice. The collaboration git cases grade the commands the agent runs *or proposes*, because the eval sandbox on macOS blocks `git` itself. The git guard hook's behaviour is covered by script tests instead. Next step for those cases (architecture, code-standards): test house-specific rules from `defaults.md` that a model without the plugin can't guess. code-standards' measurable value today is in its scripts: command detection and the leftover hook, both covered by script tests.
 
 The first agent-ops run scored 0.3: logging worked, but the agent never chose to write a goal. That's the "said done ≠ goal" gap in practice. The fix was enforcement through hooks (`goal-nudge` + done-gate rule 2), not better wording.
 
