@@ -2,6 +2,14 @@
 
 Each domain is one plugin. Each line under it is one skill. Orchestrator first.
 
+## ✅ ai-engineering (0.1)
+- `ai-design` — orchestrator: discovery, AI.md, check mode
+- `ai-feature` — per-feature card: pattern, contract, tier, fallback, evals, budget
+- `ai-stack` — Laravel AI SDK · FastAPI + Pydantic AI · split · other stacks
+- `ai-evals` · `ai-safety` · `ai-ops` — quality gates, guardrails, cost and rollout
+- `ai-learnings` — project lessons → house defaults
+- Next: eval-runner scaffolds per stack (pytest + Pest), usage-table migrations for both stacks
+
 ## ✅ product (0.1)
 - `product` — orchestrator: which stage (define → design → plan → build)
 - `product-spec` — interview → SPEC.md, requirement IDs, change control

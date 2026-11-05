@@ -5,14 +5,14 @@
   },
   "metadata": {
     "description": "Personal engineering standards as Claude Code skills, grouped by domain. Install once, follow in every project.",
-    "version": "0.4.0"
+    "version": "0.5.0"
   },
   "plugins": [
     {
       "name": "product",
       "source": "./plugins/product",
       "description": "Spec-driven long projects: interview into SPEC.md, slice into PLAN.md milestones/tasks traced to requirements, build one task at a time and resume across sessions.",
-      "version": "0.1.0",
+      "version": "0.1.1",
       "category": "development"
     },
     {
@@ -27,6 +27,13 @@
       "source": "./plugins/architecture",
       "description": "System design: repo and service shape, auth, data, APIs, ADRs. Writes docs/architecture/ARCHITECTURE.md, the contract every other plugin reads.",
       "version": "0.2.2",
+      "category": "development"
+    },
+    {
+      "name": "ai-engineering",
+      "source": "./plugins/ai-engineering",
+      "description": "Design and run AI features: discovery, AI.md, feature cards, Laravel AI SDK / FastAPI + Pydantic AI, evals, safety, ops, and a learning loop into house defaults.",
+      "version": "0.1.0",
       "category": "development"
     }
   ]

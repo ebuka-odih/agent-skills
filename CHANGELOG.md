@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.5.0 — 2026-11-05
+- New plugin `ai-engineering` 0.1.0: 7 skills (ai-design, ai-feature, ai-stack, ai-evals, ai-safety, ai-ops, ai-learnings), SessionStart drift hook, 10 script tests, 4 eval cases. House defaults seeded from two FastAPI + Pydantic AI projects.
+- `product` 0.1.1: lifecycle routes AI requirements to ai-design.
+
 ## 0.4.0 — 2026-11-05
 - New plugin `product` 0.1.0: `product`, `product-spec`, `project-plan`, `next-task`; SessionStart hook with project status; `trace.sh` traceability; 29 script tests; 4 eval cases.
 - `agent-ops` 0.1.1: GOAL.md links to a plan task (`task:`, `covers:`); verify-done updates PLAN.md.

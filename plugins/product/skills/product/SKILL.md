@@ -30,6 +30,7 @@ Check which files exist, in this order. The first missing one is the stage.
 |---|---|---|
 | SPEC.md | Define | `product-spec` |
 | ARCHITECTURE.md | Design | `system-design` (architecture plugin) — it reads SPEC.md |
+| `docs/ai/AI.md`, and SPEC has requirements a model would fulfil | AI design | `ai-design` (ai-engineering plugin) |
 | PLAN.md | Plan | `project-plan` |
 | — all exist | Build | `next-task` |
 

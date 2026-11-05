@@ -1,0 +1,8 @@
+{
+  "description": "ai-engineering: at session start, report AI drift — missing AI.md in AI projects, spec changes since the AI design, features without cards or evals, unpromoted learnings.",
+  "hooks": {
+    "SessionStart": [
+      { "hooks": [ { "type": "command", "command": "bash", "args": ["${CLAUDE_PLUGIN_ROOT}/scripts/ai-context.sh"], "timeout": 10 } ] }
+    ]
+  }
+}
