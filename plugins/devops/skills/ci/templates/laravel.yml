@@ -1,0 +1,57 @@
+# .github/workflows/ci.yml — Laravel. Adapt PHP version, DB and paths. Pin third-party actions to SHAs.
+name: CI
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    services:
+      postgres:
+        image: postgres:16
+        env: { POSTGRES_PASSWORD: postgres, POSTGRES_DB: testing }
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U postgres" --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      DB_CONNECTION: pgsql
+      DB_HOST: 127.0.0.1
+      DB_DATABASE: testing
+      DB_USERNAME: postgres
+      DB_PASSWORD: postgres
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }            # mutation/diff jobs need history
+      - uses: shivammathur/setup-php@v2     # pin to SHA in real repos
+        with: { php-version: "8.4", coverage: pcov }
+      - uses: actions/cache@v4
+        with:
+          path: ~/.composer/cache
+          key: composer-${{ hashFiles('composer.lock') }}
+      - run: composer install --no-interaction --prefer-dist --no-progress
+      - run: cp .env.example .env && php artisan key:generate
+      - run: vendor/bin/pint --test
+      - run: vendor/bin/phpstan analyse --no-progress
+      - run: php artisan test --parallel
+      - name: Mutation (changed code, critical rules)
+        if: github.event_name == 'pull_request'
+        run: vendor/bin/pest --mutate --parallel --min=80
+      - run: composer audit
+
+  secrets:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - uses: gitleaks/gitleaks-action@v2   # pin to SHA in real repos
+        env: { GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}" }

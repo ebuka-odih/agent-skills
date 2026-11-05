@@ -1,0 +1,8 @@
+{
+  "description": "devops: ask before destructive infrastructure and production commands (terraform destroy/-auto-approve, migrate:fresh, DROP/TRUNCATE, volume deletes, kubectl delete in prod, production deploys).",
+  "hooks": {
+    "PreToolUse": [
+      { "matcher": "Bash", "hooks": [ { "type": "command", "command": "bash", "args": ["${CLAUDE_PLUGIN_ROOT}/scripts/infra-guard.sh"], "timeout": 10 } ] }
+    ]
+  }
+}

@@ -1,0 +1,47 @@
+# .github/workflows/backend.yml — FastAPI with uv. Adapt working-directory and Python version.
+name: Backend
+on:
+  pull_request:
+    paths: ["backend/**", ".github/workflows/backend.yml"]
+  push:
+    branches: [main]
+    paths: ["backend/**"]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+defaults:
+  run:
+    working-directory: backend
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    services:
+      postgres:
+        image: postgres:16
+        env: { POSTGRES_PASSWORD: postgres, POSTGRES_DB: testing }
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U postgres" --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      DATABASE_URL: postgresql+asyncpg://postgres:postgres@127.0.0.1:5432/testing
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5        # pin to SHA in real repos
+        with: { enable-cache: true }
+      - run: uv sync --frozen
+      - run: uv run ruff format --check .
+      - run: uv run ruff check .
+      - run: uv run mypy .
+      - run: uv run pytest -q
+      - run: uvx pip-audit
+      - name: Contract diff (if openapi is committed)
+        if: hashFiles('backend/openapi.json') != ''
+        run: |
+          uv run python -c "import json; from app.main import app; print(json.dumps(app.openapi()))" > /tmp/openapi.json
+          git show origin/main:backend/openapi.json > /tmp/base.json || exit 0
+          npx --yes oasdiff breaking /tmp/base.json /tmp/openapi.json --fail-on ERR
