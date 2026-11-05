@@ -5,7 +5,7 @@
   },
   "metadata": {
     "description": "Personal engineering standards as Claude Code skills, grouped by domain. Install once, follow in every project.",
-    "version": "0.9.0"
+    "version": "1.0.0"
   },
   "plugins": [
     {
@@ -19,7 +19,7 @@
       "name": "agent-ops",
       "source": "./plugins/agent-ops",
       "description": "Logs every agent action to .agent-log/, writes a goal contract before work, and blocks 'done' until each acceptance criterion has evidence.",
-      "version": "0.1.1",
+      "version": "0.1.2",
       "category": "development"
     },
     {
@@ -54,13 +54,20 @@
       "name": "security",
       "source": "./plugins/security",
       "description": "Security baseline (SECURITY.md), secure coding for Laravel/FastAPI/React, STRIDE threat models, secrets and dependency hygiene, full audits via Cloudflare's security-audit skill; hook blocks secrets in code.",
-      "version": "0.1.0",
+      "version": "0.1.1",
       "category": "development"
     },
     {
       "name": "testing",
       "source": "./plugins/testing",
       "description": "Pick tests from a change's conditions \u2014 mutation, property-based, contract, E2E, load, accessibility, visual \u2014 on top of code-standards unit/feature tests; diff-based planner and tool detection.",
+      "version": "0.1.1",
+      "category": "development"
+    },
+    {
+      "name": "devops",
+      "source": "./plugins/devops",
+      "description": "Delivery pipeline PR \u2192 production: CI templates (Laravel, FastAPI, Node), environments, IaC, observability and SLOs, safe release/rollback; hook asks before destructive infra or production commands.",
       "version": "0.1.0",
       "category": "development"
     }

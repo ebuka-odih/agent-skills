@@ -23,7 +23,7 @@ git switch -q -c feat/T7-cancel
 mkdir -p app/services app/api/v1/endpoints web/src/components/ui web/src/pages database/migrations app/agents/concierge tests app/models
 touch app/services/fees.py app/api/v1/endpoints/bookings.py web/src/components/ui/Button.tsx web/src/pages/Checkout.tsx \
       database/migrations/2026_11_05_add_fee.php app/agents/concierge/agent.py tests/test_fees.py README.md app/models/label.py
-mkdir -p .claude/worktrees/x web/src; touch .claude/worktrees/x/a.py web/src/config.json web/src/styles.css
+mkdir -p .claude/worktrees/x web/src app/hooks evals/case/resources; touch .claude/worktrees/x/a.py web/src/config.json web/src/styles.css app/hooks/git-guard.sh evals/case/resources/refunds.py
 out=$(bash "$PLAN" main)
 row() { grep -F "| \`$1\` |" <<<"$out"; }
 check "fees.py → mutation + property"          'row app/services/fees.py | grep -q "mutation" && row app/services/fees.py | grep -q "property-based"'
@@ -35,9 +35,11 @@ check "migration → up/down/up"                 'row database/migrations/2026_1
 check "agent → AI evals"                       'row app/agents/concierge/agent.py | grep -q "AI evals"'
 check "test file → tests only"                 'row tests/test_fees.py | grep -q "tests only"'
 check "dot-folders and config skipped"         '! grep -qE "\.claude/|config\.json|styles\.css" <<<"$out"'
+check "guard script → mutation"                'row app/hooks/git-guard.sh | grep -q mutation'
+check "eval fixtures skipped"                 '! grep -q "evals/case/resources" <<<"$out"'
 check "README skipped"                         '! grep -q "README.md" <<<"$out"'
 check "plain model → base only"                'row app/models/label.py | grep -qE "\| unit/feature \(base\) \|$"'
-check "summary lists mutation reason"          'grep -q "^- \*\*mutation testing\*\* — app/services/fees.py is a critical rule" <<<"$out"'
+check "summary lists mutation reason"          'grep "^- \*\*mutation testing\*\*" <<<"$out" | grep -q "app/services/fees.py is a critical rule"'
 check "conditions line"                        'grep -q "contract file found · load NFRs: NFR1 · a11y NFRs: NFR2" <<<"$out"'
 
 R2="$TMP/small"; mkdir -p "$R2/app/models"; cd "$R2"; git init -q -b main; touch app/models/x.py; $G add -A; $G commit -qm "chore: init"

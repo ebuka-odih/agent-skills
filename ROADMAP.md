@@ -2,6 +2,20 @@
 
 Each domain is one plugin. Each line under it is one skill. Orchestrator first.
 
+## ✅ devops (0.1)
+- `delivery-pipeline` — orchestrator: stages, gates, DELIVERY.md
+- `ci` — rules + Laravel / FastAPI / Node templates
+- `environments` — four environments, config vs secrets
+- `infrastructure-as-code` — platform choice, Dockerfiles, Terraform rules
+- `observability` — logs, metrics, traces, SLOs, alerts
+- `release-and-rollback` — strategies, migrations, flags, incident runbook
+- Next: run the 3 eval cases (blocked by usage limit on 2026-11-05)
+
+## Everything planned is built — next ideas
+- Promote cross-project lessons (ai-engineering learning loop) into house defaults
+- Make architecture / code-standards evals test house-specific rules so they discriminate
+- CI templates: nightly k6, PR mutation on changed files per stack
+
 ## ✅ testing (0.1)
 - `test-strategy` — orchestrator: conditions → techniques, budget, test-plan.sh
 - `mutation-testing` — Pest --mutate, Infection, mutmut, Stryker on changed files
@@ -64,12 +78,4 @@ Each domain is one plugin. Each line under it is one skill. Orchestrator first.
 - `data-design` — stores, ownership, migrations, backups, PII
 - `api-design` — style, conventions, versioning, webhooks
 - `adr` — write and supersede decision records
-
-## ⏭ devops (next)
-- `delivery-pipeline` — orchestrator: CI → preview → staging → production
-- `ci` — required checks, caching, affected-only builds
-- `environments-and-secrets` — env parity, config, secret stores
-- `infrastructure-as-code` — Terraform/OpenTofu layout and rules
-- `observability` — logs, metrics, traces, alerts, SLOs
-- `release-and-rollback` — deploy strategies, feature flags, rollback drill
 

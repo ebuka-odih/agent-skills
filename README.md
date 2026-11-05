@@ -14,6 +14,7 @@ claude plugin install collaboration@ebuka-skills
 claude plugin install code-standards@ebuka-skills
 claude plugin install security@ebuka-skills
 claude plugin install testing@ebuka-skills
+claude plugin install devops@ebuka-skills
 ```
 
 Working on the skills from a local clone? Run `claude plugin marketplace add ./` from the repo root instead.
@@ -69,7 +70,7 @@ flowchart LR
 | `code-standards` | ✅ 0.1 | `writing-code` (orchestrator) · `structure-and-naming` · `error-handling` · `testing` · `refactoring` + leftover-scan hook |
 | `testing` | ✅ 0.1 | `test-strategy` (orchestrator) · `mutation-testing` · `property-based` · `contract-testing` · `e2e-testing` · `non-functional` (load, a11y, visual) |
 | `security` | ✅ 0.1 | `security-baseline` (orchestrator) · `secure-coding` · `threat-model` · `secrets-and-deps` · `security-audit` (→ [Cloudflare's skill](UPSTREAM.md)) + secret guard hook |
-| `devops` | planned | |
+| `devops` | ✅ 0.1 | `delivery-pipeline` (orchestrator) · `ci` · `environments` · `infrastructure-as-code` · `observability` · `release-and-rollback` + infra guard hook |
 | `collaboration` | ✅ 0.1 | `git-workflow` (orchestrator) · `commits` · `pull-requests` · `code-review` · `repo-setup` + git guard hook |
 
 ## What `architecture` does in a project
@@ -103,6 +104,17 @@ House defaults live in [`plugins/architecture/skills/system-design/references/de
 4. **`ai-evals` · `ai-safety` · `ai-ops`** cover golden sets that gate merges, prompt-injection and tool-permission controls, and a usage row plus a budget alert for every call.
 5. **`ai-learnings`** is the loop. Eval results, incidents, model swaps and spec changes become `LEARNINGS.md` entries, each with an action. Lessons seen across projects are promoted (with your approval) into `house-defaults.md`, which every new project reads first. The first defaults were seeded from two real projects (FastAPI + Pydantic AI).
 6. **Session-start hook** flags AI projects with no AI.md, spec changes since the AI design, features with no card or eval set, and lessons waiting to be promoted.
+
+## What `devops` does — PR to production, reversibly
+
+- **`delivery-pipeline`** defines the stages (PR checks → preview → staging → production, promoting the same artifact) and the gates at each one. The gates come from the other domains: tests, test-strategy, dependency audit, secret scan, AI evals and PR rules. It writes `docs/ops/DELIVERY.md`.
+- **`ci`** sets the rules (frozen installs, least-privilege `permissions:`, pinned actions, concurrency, < 10 min) and ships templates for **Laravel**, **FastAPI (uv)** and **Node/React**.
+- **`environments`** covers local / preview / staging / production, config vs secrets, `.env.example`, staging in provider test mode, and failing fast on missing config.
+- **`infrastructure-as-code`** covers platform choice (Laravel Cloud/Forge, Dokploy, PaaS, Terraform), production Dockerfiles (multi-stage, non-root) and the plan → review → apply flow.
+- **`observability`** covers structured logs with request IDs, RED metrics, OpenTelemetry traces, `/health` and `/ready`, SLOs from spec targets, and burn-rate alerts routed to a person.
+- **`release-and-rollback`** covers rolling, blue/green or canary deploys, expand → migrate → contract migrations, feature flags, a RELEASE.md template and an incident runbook.
+- **`devops-scan.sh`** reports CI gaps (tests, lint, types, audit, secret scan, frozen installs, unpinned actions, permissions), the deploy target, root-running Dockerfiles, IaC and a missing health endpoint.
+- **The infra guard hook asks first** before `terraform destroy` or `apply -auto-approve`, `migrate:fresh`/`db:wipe`/`rollback`, DROP/TRUNCATE/FLUSHALL, volume deletes, `compose down -v`, kubectl delete/scale in prod, platform app deletes and production deploys.
 
 ## What `testing` does — the right tests for the conditions
 
@@ -179,7 +191,7 @@ Two layers. Both must pass before bumping a version.
 
 | Layer | What it proves | Run |
 |---|---|---|
-| Script tests | Hooks log correctly, redact secrets, gate blocks/releases; plan parsing, ready logic, traceability | `bash plugins/agent-ops/tests/run.sh` · `bash plugins/product/tests/run.sh` · `bash plugins/ai-engineering/tests/run.sh` · `bash plugins/collaboration/tests/run.sh` · `bash plugins/code-standards/tests/run.sh` · `bash plugins/security/tests/run.sh` · `bash plugins/testing/tests/run.sh` |
+| Script tests (258 checks) | Hooks log correctly, redact secrets, gate blocks/releases; plan parsing, ready logic, traceability | `bash plugins/agent-ops/tests/run.sh` · `bash plugins/product/tests/run.sh` · `bash plugins/ai-engineering/tests/run.sh` · `bash plugins/collaboration/tests/run.sh` · `bash plugins/code-standards/tests/run.sh` · `bash plugins/security/tests/run.sh` · `bash plugins/testing/tests/run.sh` |
 | Skill evals | A real agent with the plugin does what SKILL.md promises, compared with the same agent without it | `cd plugins/<domain> && claude plugin eval . --allow-tools Write Edit Bash --no-publish` |
 
 ### Latest results — 2026-11-05 (Claude Opus 5.5)
@@ -190,6 +202,7 @@ Two layers. Both must pass before bumping a version.
 | collaboration · branch-for-task | **1.0** | 0.0 | Next ready task on `feat/T4-<slug>` |
 | collaboration · commit-message | 1.0 | 1.0 | Stages only task files, Conventional subject, Refs: T4/R3 |
 | collaboration · pr-description | 1.0 | 1.0 | Body from task + requirement + goal evidence, honest Not done |
+| devops · ci-for-fastapi · prod-migration-failed · release-plan | pending | pending | Not run yet: the account usage limit was hit; rerun after reset |
 | testing · mutation-setup | **1.0** | 0.0 | Pest `--mutate` + `covers()`, boundary tests that kill mutants, scoped `--min` gate |
 | testing · property-tests | **1.0** | 0.2 | Hypothesis invariants, aware datetimes, invalid inputs, kept boundary examples |
 | testing · strategy-for-change | **1.0** | 0.2 | Property + mutation for the fee, contract/load for the endpoint, a11y for UI, sized by budget |
@@ -218,6 +231,11 @@ Two layers. Both must pass before bumping a version.
 Where both arms score 1.0, the base model already knows the general advice. The collaboration git cases grade the commands the agent runs *or proposes*, because the eval sandbox on macOS blocks `git` itself. The git guard hook's behaviour is covered by script tests instead. Next step for those cases (architecture, code-standards): test house-specific rules from `defaults.md` that a model without the plugin can't guess. code-standards' measurable value today is in its scripts: command detection and the leftover hook, both covered by script tests.
 
 The first agent-ops run scored 0.3: logging worked, but the agent never chose to write a goal. That's the "said done ≠ goal" gap in practice. The fix was enforcement through hooks (`goal-nudge` + done-gate rule 2), not better wording.
+
+| Mutation testing | Tests fail when a guard rule is broken: every guard and secret pattern at 100% | `bash tools/run-all-tests.sh --mutation` |
+| Fuzz / property tests | 9 hooks never crash, always return valid JSON and a known decision, on 1,890 hostile inputs | `bash tools/fuzz-hooks.sh` |
+
+All of it, at once: `bash tools/run-all-tests.sh` (CI runs it on every push). How the testing skill was applied to this repo, and what it found: [docs/quality/TESTING.md](docs/quality/TESTING.md).
 
 Eval cases live in `plugins/<domain>/evals/<case>/` — `prompt.md` (the task) + `graders/*.md` (skill fired, files written, regex on contents, LLM-judged quality).
 

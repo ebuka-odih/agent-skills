@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.0.0 — 2026-11-05
+- New plugin `devops` 0.1.0: `delivery-pipeline`, `ci` (+ Laravel/FastAPI/Node templates), `environments`, `infrastructure-as-code`, `observability`, `release-and-rollback`; infra guard hook; `devops-scan.sh`; 53 script tests; 3 eval cases (not yet run — usage limit).
+- Repo tests itself with its `testing` plugin: `tools/run-all-tests.sh`, `tools/mutate-bash.sh` (bash mutation testing), `tools/fuzz-hooks.sh`, `.github/workflows/ci.yml`, report in `docs/quality/TESTING.md`.
+- Mutation testing found and closed real gaps: `security` 0.1.1 (per-pattern tests), `agent-ops` 0.1.2 (per-rule redaction tests, all-ticked gate test).
+- `testing` 0.1.1: planner treats guards/gates/redaction as critical; skips eval/test fixtures.
+
 ## 0.9.0 — 2026-11-05
 - New plugin `testing` 0.1.0: `test-strategy`, `mutation-testing`, `property-based`, `contract-testing`, `e2e-testing`, `non-functional`; `test-plan.sh`, `test-tools.sh`; 22 script tests; 4 eval cases.
 - `code-standards` 0.1.2: `testing` and `writing-code` route to `test-strategy`.

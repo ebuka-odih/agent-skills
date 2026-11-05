@@ -1,0 +1,36 @@
+# CI for the skills repo itself: every plugin's script tests + hook fuzzing on each push/PR,
+# mutation testing of the guard scripts weekly and on demand. Evals need a Claude API
+# credential and cost money, so they run locally (see README "Testing the skills").
+name: CI
+on:
+  pull_request:
+  push:
+    branches: [main]
+  schedule:
+    - cron: "0 6 * * 1"          # weekly mutation run
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Script tests + fuzz
+        run: bash tools/run-all-tests.sh --fuzz 100
+      - name: Repo security self-scan
+        run: bash plugins/security/scripts/security-scan.sh . | tee /tmp/scan.txt && ! grep -q "TRACKED:" /tmp/scan.txt
+
+  mutation:
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - name: Mutation testing of guard scripts
+        run: bash tools/run-all-tests.sh --mutation --fuzz 20

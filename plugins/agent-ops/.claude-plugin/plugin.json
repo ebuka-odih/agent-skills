@@ -1,6 +1,6 @@
 {
   "name": "agent-ops",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Logs every agent action to .agent-log/, writes a goal contract before work, and blocks 'done' until each acceptance criterion has evidence. Closes the gap between what the agent claims and what was asked.",
   "author": {
     "name": "ebuka-odih"

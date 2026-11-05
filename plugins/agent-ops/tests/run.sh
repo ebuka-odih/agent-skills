@@ -47,6 +47,19 @@ check "caps output at 2000 chars"      '[ "$(jq -r "select(.summary==\"/big\") |
 send 'not json' "$LOG"; check "bad input never fails"  '[ $? -eq 0 ]'
 check "every line is valid JSON"       'jq -c . "$(logfile)" >/dev/null'
 
+echo "redaction rules (each tested alone)"
+. "$ROOT/scripts/lib.sh"
+r() { printf '%s' "$1" | ao_redact 2000; }
+SK="sk""-abcdefghijklmnopqrstuvwx"; GHT="gh""p_ABCDEFGHIJKLMNOPQRST"; AK="AK""IAABCDEFGHIJKLMNOP"; XB="xo""xb-1234-abcd-efgh"
+check "sk- key redacted"          '! grep -q "ijklmnop" <<<"$(r "result $SK done")"'
+check "github token redacted"     '! grep -q "KLMNOPQRST" <<<"$(r "using $GHT now")"'
+check "aws key redacted"          '! grep -q "EFGHIJKLMNOP" <<<"$(r "id $AK x")"'
+check "slack token redacted"      '! grep -q "abcd-efgh" <<<"$(r "hook $XB x")"'
+check "password=value redacted"   '! grep -q "hunter2" <<<"$(r "password=hunter2 next")"'
+check "bearer redacted"           '! grep -q "abc.def.ghi" <<<"$(r "Bearer abc.def.ghi")"'
+check "plain text untouched"      '[ "$(r "npm test passed")" = "npm test passed" ]'
+check "length capped"             '[ "$(r "$(printf "x%.0s" {1..3000})" | wc -c | tr -d " ")" -le 2000 ]'
+
 echo "done-gate"
 send '{"hook_event_name":"UserPromptSubmit","session_id":"'$SID'","cwd":"'$PROJ'","prompt":"next turn"}' "$LOG"
 out=$(send '{"hook_event_name":"Stop","session_id":"'$SID'","cwd":"'$PROJ'","stop_hook_active":false}' "$GATE")
@@ -80,6 +93,11 @@ check "status partial → allows stop"         '[ -z "$out" ]'
 sed -i.bak 's/^status: partial/status: active/' "$PROJ/.agent-log/GOAL.md"
 out=$(AGENT_OPS_GATE=off send '{"hook_event_name":"Stop","session_id":"'$SID'","cwd":"'$PROJ'","stop_hook_active":false}' "$GATE")
 check "AGENT_OPS_GATE=off disables gate"     '[ -z "$out" ]'
+
+printf -- '---\nstatus: active\n---\n- [x] C1: done · check: x\n- [ ] C2: b · check: y — BLOCKED: waiting on vendor\n' > "$PROJ/.agent-log/GOAL.md"
+send '{"hook_event_name":"UserPromptSubmit","session_id":"'$SID'","cwd":"'$PROJ'","prompt":"t"}' "$LOG"
+out=$(send '{"hook_event_name":"Stop","session_id":"'$SID'","cwd":"'$PROJ'","stop_hook_active":false}' "$GATE")
+check "active goal, all ticked/BLOCKED → allows" '[ -z "$out" ]'
 
 echo "done-gate rule 2 (edits without a goal)"
 rm -f "$PROJ/.agent-log/GOAL.md"

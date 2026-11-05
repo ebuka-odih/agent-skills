@@ -14,6 +14,10 @@ AWS="AK""IA""ABCDEFGHIJKLMNOP"
 GH="gh""p_""$(printf 'b%.0s' {1..36})"
 PEM="-----BEGIN ""RSA PRIVATE KEY-----"
 ANTH="sk-""ant-""$(printf 'c%.0s' {1..40})"
+GHPAT="github""_pat_""$(printf 'd%.0s' {1..70})"
+OPENAI="sk-""proj-""$(printf 'e%.0s' {1..48})"
+SLACK="xo""xb-""$(printf '1%.0s' {1..24})"
+GOOG="AI""za""$(printf 'f%.0s' {1..35})"
 TMP="$(mktemp -d)"; trap 'rm -rf "$TMP"' EXIT
 R="$TMP/repo"; mkdir -p "$R/config"; cd "$R"; git init -q; printf '.env\n' > .gitignore
 
@@ -30,6 +34,11 @@ check "aws key → deny"                          '[ "$(decide app/aws.py "KEY=\
 check "github token → deny"                     '[ "$(decide .github/x.yml "token: $GH")" = deny ]'
 check "private key → deny"                      '[ "$(decide certs/key.pem "$PEM")" = deny ]'
 check "anthropic key → deny"                    '[ "$(decide app/ai.py "k=\"$ANTH\"")" = deny ]'
+for pair in "stripe-live|$STRIPE" "aws-access-key|$AWS" "github-token|$GH" "github-pat|$GHPAT" "anthropic-key|$ANTH" "openai-key|$OPENAI" "slack-token|$SLACK" "google-api-key|$GOOG" "private-key|$PEM"; do
+  kind="${pair%%|*}"; val="${pair#*|}"
+  check "kind named: $kind"                 'reason app/k.py "x = \"$val\"" | grep -q "($kind"'
+done
+check ".env.example reason is specific"         'reason .env.example "STRIPE_SECRET=$STRIPE" | grep -q "must only hold placeholders"'
 check "gitignored .env → allow"                 '[ "$(decide .env "STRIPE_SECRET=$STRIPE")" = allow ]'
 check ".env.example with real key → deny"       '[ "$(decide .env.example "STRIPE_SECRET=$STRIPE")" = deny ]'
 check "unignored .env.production → deny"        '[ "$(decide .env.production "K=$STRIPE")" = deny ] && reason .env.production "K=$STRIPE" | grep -q "isn.t gitignored"'

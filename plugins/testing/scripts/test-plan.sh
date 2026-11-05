@@ -22,9 +22,9 @@ for c in openapi.yaml openapi.yml openapi.json docs/openapi.yaml api/openapi.yam
 ls ./*/openapi.* >/dev/null 2>&1 && has_contract=1
 grep -rqlE 'FastAPI\(' --include=*.py . 2>/dev/null && has_contract=1   # FastAPI publishes OpenAPI
 
-CRIT='pay|billing|invoice|refund|charge|price|pricing|fee|tax|discount|coupon|money|wallet|ledger|payout|auth|login|password|permission|polic|role|tenant|quota|subscription|entitle'
-PURE='(^|/)(services?|domain|actions?|lib|utils?|rules?|calculat|pricing|billing)(/|$)|_service\.|Service\.php$|Action\.php$'
-INPUTY='money|price|fee|tax|discount|date|time|tz|parse|format|valid|serial|slug|sort|rank|split|round|currency|amount|schedule'
+CRIT='pay|billing|invoice|refund|charge|price|pricing|fee|tax|discount|coupon|money|wallet|ledger|payout|auth|login|password|permission|polic|role|tenant|quota|subscription|entitle|guard|gate|redact|secret|sanitiz|validat'
+PURE='(^|/)(services?|domain|actions?|lib|utils?|rules?|calculat|pricing|billing|scripts)(/|$)|_service\.|Service\.php$|Action\.php$'
+INPUTY='money|price|fee|tax|discount|date|time|tz|parse|format|valid|serial|slug|sort|rank|split|round|currency|amount|schedule|scan|pattern|guard|trace'
 JOURNEY='checkout|booking|book|signup|sign-up|register|login|onboard|payment|pay|cart|order'
 
 # bash 3.2 (macOS) has no associative arrays: collect "technique<TAB>reason" lines instead
@@ -37,6 +37,7 @@ while IFS= read -r f; do
   lf=$(tr 'A-Z' 'a-z' <<<"$f")
   case "$lf" in
     .*|*/.*/*) continue ;;                                   # dot-folders: tooling, worktrees, editor state
+    */evals/*|evals/*|*/fixtures/*|fixtures/*|*/testdata/*) continue ;;   # eval/test fixtures are data
     *.md|*.txt|*.lock|*lock.json|*.lock.yaml|*.png|*.jpg|*.jpeg|*.gif|*.webp|*.svg|*.ico|*.woff*|*.ttf|*.pdf) continue ;;
     *.json|*.ndjson|*.yml|*.yaml|*.toml|*.ini|*.cfg|*.env*|*.csv|*.css|*.scss|*.map|docs/*|.github/*) continue ;;
     *.pptx|*.docx|*.xlsx|*.zip|*.gz|*.mp4|*.mov|*.mp3|*.wav|*.sqlite|*.db) continue ;;
