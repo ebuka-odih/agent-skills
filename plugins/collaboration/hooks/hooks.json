@@ -1,0 +1,8 @@
+{
+  "description": "collaboration: block force-push to main/master, --no-verify and non-Conventional commit messages; ask before committing directly to main.",
+  "hooks": {
+    "PreToolUse": [
+      { "matcher": "Bash", "hooks": [ { "type": "command", "command": "bash", "args": ["${CLAUDE_PLUGIN_ROOT}/scripts/git-guard.sh"], "timeout": 10 } ] }
+    ]
+  }
+}

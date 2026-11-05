@@ -2,6 +2,14 @@
 
 Each domain is one plugin. Each line under it is one skill. Orchestrator first.
 
+## ✅ collaboration (0.1)
+- `git-workflow` — orchestrator: lifecycle + hard rules
+- `commits` — Conventional Commits, atomic, never-commit list
+- `pull-requests` — sizing, body from PLAN + GOAL evidence, checks, merge
+- `code-review` — checklist, labelled comments, verdict, reviewing agent PRs
+- `repo-setup` — PR template, CODEOWNERS, PR-title check, branch protection
+- Next: release notes / changelog from Conventional Commits; GitHub Issues ↔ PLAN.md sync
+
 ## ✅ ai-engineering (0.1)
 - `ai-design` — orchestrator: discovery, AI.md, check mode
 - `ai-feature` — per-feature card: pattern, contract, tier, fallback, evals, budget
@@ -53,9 +61,3 @@ Each domain is one plugin. Each line under it is one skill. Orchestrator first.
 - `observability` — logs, metrics, traces, alerts, SLOs
 - `release-and-rollback` — deploy strategies, feature flags, rollback drill
 
-## collaboration
-- `git-workflow` — orchestrator: branch naming, trunk-based flow, rebasing rules
-- `commits` — Conventional Commits, atomic commits, message format
-- `pull-requests` — PR size, description template, checklist, linking issues
-- `code-review` — reviewer checklist, comment tone, approval rules
-- `issues-and-planning` — issue templates, definition of done

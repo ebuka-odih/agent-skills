@@ -1,0 +1,10 @@
+{
+  "name": "collaboration",
+  "version": "0.1.0",
+  "description": "Team git workflow: branch per plan task, Conventional Commits, PRs built from PLAN + GOAL evidence, labelled code review, repo setup — with a hook that blocks force-push to main and bad commit messages.",
+  "author": {
+    "name": "ebuka-odih"
+  },
+  "license": "MIT",
+  "keywords": ["git", "commits", "pull-requests", "code-review", "conventional-commits", "collaboration"]
+}

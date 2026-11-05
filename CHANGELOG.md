@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.6.0 — 2026-11-05
+- New plugin `collaboration` 0.1.0: `git-workflow`, `commits`, `pull-requests`, `code-review`, `repo-setup`; PreToolUse git guard; `pr-prep.sh`; 31 script tests; 4 eval cases.
+
 ## 0.5.0 — 2026-11-05
 - New plugin `ai-engineering` 0.1.0: 7 skills (ai-design, ai-feature, ai-stack, ai-evals, ai-safety, ai-ops, ai-learnings), SessionStart drift hook, 10 script tests, 4 eval cases. House defaults seeded from two FastAPI + Pydantic AI projects.
 - `product` 0.1.1: lifecycle routes AI requirements to ai-design.

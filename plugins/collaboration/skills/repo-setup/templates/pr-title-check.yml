@@ -1,0 +1,18 @@
+# .github/workflows/pr-title.yml — PR title must be a Conventional Commit subject (it becomes the squash commit).
+name: PR title
+on:
+  pull_request:
+    types: [opened, edited, synchronize, reopened]
+permissions:
+  pull-requests: read
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Conventional Commit title
+        env:
+          TITLE: ${{ github.event.pull_request.title }}
+        run: |
+          echo "$TITLE"
+          echo "$TITLE" | grep -Eq '^(feat|fix|perf|refactor|test|docs|build|ci|chore|revert|style)(\([a-z0-9._/-]+\))?!?: .{1,72}$' \
+            || { echo "::error::PR title must look like 'feat(scope): summary' (≤72 chars)"; exit 1; }

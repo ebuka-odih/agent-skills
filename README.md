@@ -10,6 +10,7 @@ claude plugin install product@ebuka-skills
 claude plugin install agent-ops@ebuka-skills
 claude plugin install architecture@ebuka-skills
 claude plugin install ai-engineering@ebuka-skills
+claude plugin install collaboration@ebuka-skills
 ```
 
 Working on the skills from a local clone? Run `claude plugin marketplace add ./` from the repo root instead.
@@ -65,7 +66,7 @@ flowchart LR
 | `code-standards` | planned | see [ROADMAP.md](ROADMAP.md) |
 | `security` | planned | builds on [Cloudflare's security-audit skill](UPSTREAM.md) |
 | `devops` | planned | |
-| `collaboration` | planned | git workflow, commits, PRs, code review |
+| `collaboration` | ✅ 0.1 | `git-workflow` (orchestrator) · `commits` · `pull-requests` · `code-review` · `repo-setup` + git guard hook |
 
 ## What `architecture` does in a project
 
@@ -99,6 +100,20 @@ House defaults live in [`plugins/architecture/skills/system-design/references/de
 5. **`ai-learnings`** is the loop. Eval results, incidents, model swaps and spec changes become `LEARNINGS.md` entries, each with an action. Lessons seen across projects are promoted (with your approval) into `house-defaults.md`, which every new project reads first. The first defaults were seeded from two real projects (FastAPI + Pydantic AI).
 6. **Session-start hook** flags AI projects with no AI.md, spec changes since the AI design, features with no card or eval set, and lessons waiting to be promoted.
 
+## What `collaboration` does — branches, commits, PRs, reviews
+
+```
+PLAN task T7 → branch feat/T7-cancel-booking → Conventional Commits (Refs: T7, R7)
+  → verify-done evidence → pr-prep.sh builds the PR body → review → squash-merge → PLAN progress log
+```
+
+- **`git-workflow`** is the lifecycle and hard rules: one task, one branch; never force-push shared branches; stage only this task's files; commit or push only when asked.
+- **`commits`** covers Conventional Commit messages, atomic commits, and a never-commit list (secrets, local paths, build output).
+- **`pull-requests`** sets a size limit (≤ 400 lines) and builds the body from PLAN.md + SPEC.md + the goal file's evidence. A **Not done** section is mandatory.
+- **`code-review`** follows a checklist order (asked → correct → fits ARCHITECTURE/AI.md → safe → tested → clear). Comments are labelled `blocking` / `suggestion` / `question` / `nit`, and agent claims are checked against their evidence.
+- **`repo-setup`** adds a PR template, CODEOWNERS, a PR-title CI check and branch protection, and asks before changing GitHub settings.
+- **Git guard hook** blocks `--force` (it allows `--force-with-lease` on your own branch), any force-push to main/master, `--no-verify`, and non-Conventional commit subjects. It asks before committing straight to main (`git config collab.allowMainCommits true` for solo repos).
+
 ## What `agent-ops` does in a project — closing the "said done ≠ actually done" gap
 
 ```mermaid
@@ -124,13 +139,17 @@ Two layers. Both must pass before bumping a version.
 
 | Layer | What it proves | Run |
 |---|---|---|
-| Script tests | Hooks log correctly, redact secrets, gate blocks/releases; plan parsing, ready logic, traceability | `bash plugins/agent-ops/tests/run.sh` · `bash plugins/product/tests/run.sh` · `bash plugins/ai-engineering/tests/run.sh` |
+| Script tests | Hooks log correctly, redact secrets, gate blocks/releases; plan parsing, ready logic, traceability | `bash plugins/agent-ops/tests/run.sh` · `bash plugins/product/tests/run.sh` · `bash plugins/ai-engineering/tests/run.sh` · `bash plugins/collaboration/tests/run.sh` |
 | Skill evals | A real agent with the plugin does what SKILL.md promises, compared with the same agent without it | `cd plugins/<domain> && claude plugin eval . --allow-tools Write Edit Bash --no-publish` |
 
 ### Latest results — 2026-11-05 (Claude Opus 5.5)
 
 | Case | With plugin | Without | What it shows |
 |---|---|---|---|
+| collaboration · review-finds-blockers | **1.0** | 0.0 | Request changes: IDOR, debug dump, wrong cutoff/refund, no evidence — with file:line |
+| collaboration · branch-for-task | **1.0** | 0.0 | Next ready task on `feat/T4-<slug>` |
+| collaboration · commit-message | 1.0 | 1.0 | Stages only task files, Conventional subject, Refs: T4/R3 |
+| collaboration · pr-description | 1.0 | 1.0 | Body from task + requirement + goal evidence, honest Not done |
 | ai-engineering · design-from-spec | **1.0** | 0.0 | AI.md + feature cards: tiers, non-AI fallbacks, eval gates, injection + grounding, owner review |
 | ai-engineering · laravel-structured | **1.0** | 0.0 | Correct Laravel AI SDK structured agent, failover, `fake()` tests |
 | ai-engineering · discovery-asks | **1.0** | 0.25 | Batched discovery questions with proposals before designing |
@@ -145,7 +164,7 @@ Two layers. Both must pass before bumping a version.
 | architecture · microservices-pushback | 1.0 | 1.0 | Recommends modular monolith for a 2-person team |
 | architecture · auth-question | 1.0 | 1.0 | Per-client auth advice (skill did not fire — model answered directly) |
 
-Where both arms score 1.0, the base model already knows the general advice. Next step for those cases: test house-specific rules from `defaults.md` that a model without the plugin can't guess.
+Where both arms score 1.0, the base model already knows the general advice. The collaboration git cases grade the commands the agent runs *or proposes*, because the eval sandbox on macOS blocks `git` itself. The git guard hook's behaviour is covered by script tests instead. Next step for those cases: test house-specific rules from `defaults.md` that a model without the plugin can't guess.
 
 The first agent-ops run scored 0.3: logging worked, but the agent never chose to write a goal. That's the "said done ≠ goal" gap in practice. The fix was enforcement through hooks (`goal-nudge` + done-gate rule 2), not better wording.
 

@@ -1,0 +1,9 @@
+# One line per area from docs/architecture/ARCHITECTURE.md. Last matching line wins.
+# Replace <handle> with real GitHub usernames or @org/team — ask, never guess.
+
+*                        @<handle>
+/docs/architecture/      @<handle>
+/docs/ai/                @<handle>
+/.github/                @<handle>
+# /app/Billing/          @<handle>
+# /backend/app/agents/   @<handle>

@@ -1,0 +1,33 @@
+diff --git a/app/Http/Controllers/BookingController.php b/app/Http/Controllers/BookingController.php
+index 3f1a2b0..8c9d4e1 100644
+--- a/app/Http/Controllers/BookingController.php
++++ b/app/Http/Controllers/BookingController.php
+@@ -40,6 +40,24 @@ class BookingController extends Controller
+         return BookingResource::collection($request->user()->bookings);
+     }
+
++    public function cancel(Request $request, Booking $booking)
++    {
++        dd($booking->toArray());
++
++        $minutesLeft = now()->diffInMinutes($booking->class->starts_at, false);
++
++        if ($minutesLeft < 60) {
++            return response()->json(['message' => 'Too late to cancel'], 422);
++        }
++
++        $booking->update(['status' => 'cancelled']);
++
++        $this->payments->refund($booking->payment_id, $booking->amount_cents / 2);
++
++        return new BookingResource($booking);
++    }
++
+diff --git a/routes/api.php b/routes/api.php
+index 77aa001..77aa0f2 100644
+--- a/routes/api.php
++++ b/routes/api.php
+@@ -18,3 +18,4 @@ Route::middleware('auth:sanctum')->group(function () {
+     Route::get('/bookings', [BookingController::class, 'index']);
++    Route::post('/bookings/{booking}/cancel', [BookingController::class, 'cancel']);
+ });

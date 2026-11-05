@@ -5,7 +5,7 @@
   },
   "metadata": {
     "description": "Personal engineering standards as Claude Code skills, grouped by domain. Install once, follow in every project.",
-    "version": "0.5.0"
+    "version": "0.6.0"
   },
   "plugins": [
     {
@@ -33,6 +33,13 @@
       "name": "ai-engineering",
       "source": "./plugins/ai-engineering",
       "description": "Design and run AI features: discovery, AI.md, feature cards, Laravel AI SDK / FastAPI + Pydantic AI, evals, safety, ops, and a learning loop into house defaults.",
+      "version": "0.1.0",
+      "category": "development"
+    },
+    {
+      "name": "collaboration",
+      "source": "./plugins/collaboration",
+      "description": "Team git workflow: branch per plan task, Conventional Commits, PRs from PLAN + GOAL evidence, labelled reviews, repo setup; hook blocks force-push to main and bad commit messages.",
       "version": "0.1.0",
       "category": "development"
     }
