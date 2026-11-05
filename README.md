@@ -13,6 +13,7 @@ claude plugin install ai-engineering@ebuka-skills
 claude plugin install collaboration@ebuka-skills
 claude plugin install code-standards@ebuka-skills
 claude plugin install security@ebuka-skills
+claude plugin install testing@ebuka-skills
 ```
 
 Working on the skills from a local clone? Run `claude plugin marketplace add ./` from the repo root instead.
@@ -66,6 +67,7 @@ flowchart LR
 | `ai-engineering` | ✅ 0.1 | `ai-design` (orchestrator) · `ai-feature` · `ai-stack` · `ai-evals` · `ai-safety` · `ai-ops` · `ai-learnings` + session-start drift hook |
 | `architecture` | ✅ 0.2 | `system-design` (orchestrator) · `repo-and-services` · `auth-design` · `data-design` · `api-design` · `adr` |
 | `code-standards` | ✅ 0.1 | `writing-code` (orchestrator) · `structure-and-naming` · `error-handling` · `testing` · `refactoring` + leftover-scan hook |
+| `testing` | ✅ 0.1 | `test-strategy` (orchestrator) · `mutation-testing` · `property-based` · `contract-testing` · `e2e-testing` · `non-functional` (load, a11y, visual) |
 | `security` | ✅ 0.1 | `security-baseline` (orchestrator) · `secure-coding` · `threat-model` · `secrets-and-deps` · `security-audit` (→ [Cloudflare's skill](UPSTREAM.md)) + secret guard hook |
 | `devops` | planned | |
 | `collaboration` | ✅ 0.1 | `git-workflow` (orchestrator) · `commits` · `pull-requests` · `code-review` · `repo-setup` + git guard hook |
@@ -101,6 +103,23 @@ House defaults live in [`plugins/architecture/skills/system-design/references/de
 4. **`ai-evals` · `ai-safety` · `ai-ops`** cover golden sets that gate merges, prompt-injection and tool-permission controls, and a usage row plus a budget alert for every call.
 5. **`ai-learnings`** is the loop. Eval results, incidents, model swaps and spec changes become `LEARNINGS.md` entries, each with an action. Lessons seen across projects are promoted (with your approval) into `house-defaults.md`, which every new project reads first. The first defaults were seeded from two real projects (FastAPI + Pydantic AI).
 6. **Session-start hook** flags AI projects with no AI.md, spec changes since the AI design, features with no card or eval set, and lessons waiting to be promoted.
+
+## What `testing` does — the right tests for the conditions
+
+Every change gets the base layer from `code-standards:testing` (unit + feature tests; bug fix → failing test first). `test-strategy` adds a technique only when its condition holds:
+
+| Condition | Adds |
+|---|---|
+| Pure logic over many inputs (money, dates, parsing) | property-based (Hypothesis, fast-check) |
+| Critical rule (payments, pricing, permissions, tenancy) | mutation testing on changed files (Pest `--mutate`, Infection, mutmut, Stryker), MSI gate |
+| Public/partner API or service boundary | contract (oasdiff, Schemathesis, Pact) |
+| Must-have SPEC journey | a few Playwright E2E tests |
+| SPEC NFR latency/throughput | k6 load test on staging with thresholds |
+| UI change | component + accessibility (axe); shared components → visual regression |
+
+- **`test-plan.sh`** reads the diff and SPEC.md NFRs and prints a per-file plan plus the reasons, skipping docs, config and binaries.
+- **`test-tools.sh`** reports which of these tools each folder already has, with install hints.
+- **Budget rules** keep CI fast: mutation and contract checks run on changed files in PRs, load tests run nightly, the E2E smoke run stays ≤ 5 min. Thresholds apply to changed code, not the whole legacy codebase.
 
 ## What `security` does — baseline, reviews, threat models, audits
 
@@ -160,7 +179,7 @@ Two layers. Both must pass before bumping a version.
 
 | Layer | What it proves | Run |
 |---|---|---|
-| Script tests | Hooks log correctly, redact secrets, gate blocks/releases; plan parsing, ready logic, traceability | `bash plugins/agent-ops/tests/run.sh` · `bash plugins/product/tests/run.sh` · `bash plugins/ai-engineering/tests/run.sh` · `bash plugins/collaboration/tests/run.sh` · `bash plugins/code-standards/tests/run.sh` · `bash plugins/security/tests/run.sh` |
+| Script tests | Hooks log correctly, redact secrets, gate blocks/releases; plan parsing, ready logic, traceability | `bash plugins/agent-ops/tests/run.sh` · `bash plugins/product/tests/run.sh` · `bash plugins/ai-engineering/tests/run.sh` · `bash plugins/collaboration/tests/run.sh` · `bash plugins/code-standards/tests/run.sh` · `bash plugins/security/tests/run.sh` · `bash plugins/testing/tests/run.sh` |
 | Skill evals | A real agent with the plugin does what SKILL.md promises, compared with the same agent without it | `cd plugins/<domain> && claude plugin eval . --allow-tools Write Edit Bash --no-publish` |
 
 ### Latest results — 2026-11-05 (Claude Opus 5.5)
@@ -171,6 +190,10 @@ Two layers. Both must pass before bumping a version.
 | collaboration · branch-for-task | **1.0** | 0.0 | Next ready task on `feat/T4-<slug>` |
 | collaboration · commit-message | 1.0 | 1.0 | Stages only task files, Conventional subject, Refs: T4/R3 |
 | collaboration · pr-description | 1.0 | 1.0 | Body from task + requirement + goal evidence, honest Not done |
+| testing · mutation-setup | **1.0** | 0.0 | Pest `--mutate` + `covers()`, boundary tests that kill mutants, scoped `--min` gate |
+| testing · property-tests | **1.0** | 0.2 | Hypothesis invariants, aware datetimes, invalid inputs, kept boundary examples |
+| testing · strategy-for-change | **1.0** | 0.2 | Property + mutation for the fee, contract/load for the endpoint, a11y for UI, sized by budget |
+| testing · no-overkill | 1.0 | 1.0 | A label change gets only the existing test updated |
 | security · audit-delegation | **1.0** | 0.4 | Routes to Cloudflare's skill, asks before installing, output outside repo |
 | security · secret-to-config | **1.0** | 0.78 | Key into gitignored .env + `env()`, never code; tells you to rotate |
 | security · review-idor-sqli | 1.0 | 1.0 | IDOR, SQL injection, mass assignment, unverified webhook |

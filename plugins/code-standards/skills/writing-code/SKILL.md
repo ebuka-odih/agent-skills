@@ -30,7 +30,7 @@ House defaults: [references/defaults.md](references/defaults.md). Stack guides: 
    bash "${CLAUDE_PLUGIN_ROOT}/scripts/project-commands.sh"
    ```
    It prints format / lint / types / test commands detected from the repo.
-4. **Write the test first or alongside** — `testing` skill. A bug fix starts with a failing test that reproduces it.
+4. **Write the test first or alongside** — `testing` skill. A bug fix starts with a failing test that reproduces it. Non-trivial change → `test-strategy` (testing plugin) picks any extra techniques from the diff.
 5. **Write the code** — the stack guide + `structure-and-naming` + `error-handling`. Smallest change that passes; no speculative abstractions.
 6. **Run, in order:** format → lint → types → tests (fast suite, then the module's full tests). Fix every failure you caused; report ones you didn't.
 7. **Scan for leftovers** — `bash "${CLAUDE_PLUGIN_ROOT}/scripts/leftover-scan.sh"` (debug calls, secrets, local paths in changed files). The hook also flags these as you edit.

@@ -13,6 +13,8 @@ description: Write tests that prove behaviour and catch regressions — choose t
 ## 2. Pick the level — [references/levels.md](references/levels.md)
 Default: **feature/integration tests at the module boundary** (HTTP endpoint or service with a real test DB). Unit tests for pure logic with many cases. E2E only for critical journeys.
 
+This skill is the **base layer**. When the change involves money/auth rules, pure logic over many inputs, a public API, a spec journey, an NFR target or UI, also run the `test-strategy` skill (testing plugin) — it adds mutation, property-based, contract, E2E, load, accessibility or visual tests only where their conditions hold.
+
 ## 3. Write it
 - Arrange → Act → Assert; one behaviour per test; name says the behaviour (`refunds in full when cancelled 2 h before class`).
 - Build data with factories/fixtures; only set fields the test cares about.

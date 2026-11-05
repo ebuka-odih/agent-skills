@@ -1,0 +1,10 @@
+{
+  "name": "testing",
+  "version": "0.1.0",
+  "description": "Pick the right tests from a change's conditions — mutation, property-based, contract, end-to-end, load, accessibility, visual — for Laravel, FastAPI and TS/React, on top of code-standards' unit/feature tests. Includes a diff-based test planner and tool detection.",
+  "author": {
+    "name": "ebuka-odih"
+  },
+  "license": "MIT",
+  "keywords": ["testing", "mutation-testing", "property-based-testing", "contract-testing", "e2e", "playwright", "k6", "accessibility"]
+}

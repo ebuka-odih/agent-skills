@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.9.0 — 2026-11-05
+- New plugin `testing` 0.1.0: `test-strategy`, `mutation-testing`, `property-based`, `contract-testing`, `e2e-testing`, `non-functional`; `test-plan.sh`, `test-tools.sh`; 22 script tests; 4 eval cases.
+- `code-standards` 0.1.2: `testing` and `writing-code` route to `test-strategy`.
+
 ## 0.8.0 — 2026-11-05
 - New plugin `security` 0.1.0: `security-baseline`, `secure-coding`, `threat-model`, `secrets-and-deps`, `security-audit` (Cloudflare delegate); secret guard hook; `security-scan.sh`; 24 script tests; 4 eval cases.
 - `code-standards` 0.1.1: TODO/FIXME/XXX matched as whole words only (XXXX placeholders were false positives).

@@ -2,6 +2,15 @@
 
 Each domain is one plugin. Each line under it is one skill. Orchestrator first.
 
+## ✅ testing (0.1)
+- `test-strategy` — orchestrator: conditions → techniques, budget, test-plan.sh
+- `mutation-testing` — Pest --mutate, Infection, mutmut, Stryker on changed files
+- `property-based` — Hypothesis, fast-check, PHP options
+- `contract-testing` — oasdiff, Schemathesis, Pact
+- `e2e-testing` — Playwright critical journeys, flake policy
+- `non-functional` — k6 load, axe accessibility, visual regression
+- Next: CI workflow templates per stack (PR mutation on changed files, nightly k6)
+
 ## ✅ security (0.1)
 - `security-baseline` — orchestrator: checklist → SECURITY.md, routing
 - `secure-coding` — OWASP-mapped rules for Laravel / FastAPI / React

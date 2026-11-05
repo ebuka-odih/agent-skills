@@ -5,7 +5,7 @@
   },
   "metadata": {
     "description": "Personal engineering standards as Claude Code skills, grouped by domain. Install once, follow in every project.",
-    "version": "0.8.0"
+    "version": "0.9.0"
   },
   "plugins": [
     {
@@ -47,13 +47,20 @@
       "name": "code-standards",
       "source": "./plugins/code-standards",
       "description": "Write maintainable code: placed by ARCHITECTURE.md, consistent naming, errors at the right layer, tests with every change, safe refactors \u2014 Laravel, FastAPI, TS/React \u2014 plus command detection and a leftover check.",
-      "version": "0.1.1",
+      "version": "0.1.2",
       "category": "development"
     },
     {
       "name": "security",
       "source": "./plugins/security",
       "description": "Security baseline (SECURITY.md), secure coding for Laravel/FastAPI/React, STRIDE threat models, secrets and dependency hygiene, full audits via Cloudflare's security-audit skill; hook blocks secrets in code.",
+      "version": "0.1.0",
+      "category": "development"
+    },
+    {
+      "name": "testing",
+      "source": "./plugins/testing",
+      "description": "Pick tests from a change's conditions \u2014 mutation, property-based, contract, E2E, load, accessibility, visual \u2014 on top of code-standards unit/feature tests; diff-based planner and tool detection.",
       "version": "0.1.0",
       "category": "development"
     }
