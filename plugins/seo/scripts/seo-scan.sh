@@ -22,8 +22,10 @@ parse() {
   perl -0777 -ne '
     sub attr { my ($tag, $name) = @_; return $tag =~ /\b$name\s*=\s*["\x27]([^"\x27]*)["\x27]/i ? $1 : undef }
     sub flat { my $v = shift // ""; $v =~ s/\s+/ /g; $v =~ s/^ | $//g; return $v }
+    sub chars { my $v = shift; utf8::decode($v); return length $v }   # characters, not bytes, in any locale
     my $h = $_;
     print "title\t", flat($1), "\n" while $h =~ /<title[^>]*>(.*?)<\/title>/gis;
+    print "tlen\t", chars(flat($1)), "\n" if $h =~ /<title[^>]*>(.*?)<\/title>/is;
     my $n = () = $h =~ /<h1[\s>]/gi; print "h1\t$n\n";
     print "lang\t", flat(attr(($h =~ /(<html[^>]*>)/i)[0] // "", "lang")), "\n";
     while ($h =~ /<script[^>]*application\/ld\+json[^>]*>(.*?)<\/script>/gis) { print "ld\t", flat($1), "\n" }
@@ -31,7 +33,8 @@ parse() {
       print "canonical\t", flat(attr($t,"href")), "\n" if $r eq "canonical";
       print "hreflang\t", flat(attr($t,"hreflang")), "\t", flat(attr($t,"href")), "\n" if $r eq "alternate" && defined attr($t,"hreflang") }
     while ($h =~ /(<meta\b[^>]*>)/gi) { my $t = $1; my $k = lc(attr($t,"name") // attr($t,"property") // "");
-      print "$k\t", flat(attr($t,"content")), "\n" if $k =~ /^(description|robots|og:title|og:description|og:image)$/ }
+      print "$k\t", flat(attr($t,"content")), "\n" if $k =~ /^(description|robots|og:title|og:description|og:image)$/;
+      print "dlen\t", chars(flat(attr($t,"content"))), "\n" if $k eq "description" }
   '
 }
 
@@ -43,10 +46,12 @@ while IFS= read -r f; do
   rel="${f#"$dir"/}"
   case "$rel" in 404.html|*/404.html|500.html) continue ;; esac
   n=$((n+1))
-  title="" desc="" canon="" robots="" h1=0 lang="" ogt="" ogd="" ogi="" lds="" alts_page=""
+  tl=0 dl="" title="" desc="" canon="" robots="" h1=0 lang="" ogt="" ogd="" ogi="" lds="" alts_page=""
   while IFS=$'\t' read -r k v; do
     case "$k" in
       title) [ -n "$title" ] || title="$v" ;;
+      tlen) tl="$v" ;;
+      dlen) [ -n "$dl" ] || dl="$v" ;;
       description) [ -n "$desc" ] || desc="$v" ;;
       canonical) [ -n "$canon" ] || canon="$v" ;;
       robots) [ -n "$robots" ] || robots=$(tr 'A-Z' 'a-z' <<<"$v") ;;
@@ -64,13 +69,11 @@ while IFS= read -r f; do
   # title / description
   [ -z "$title" ] && issue error "$rel" "missing <title>"
   if [ -n "$title" ]; then
-    tl=${#title}
     [ "$tl" -gt 60 ] && issue warn "$rel" "title is $tl chars (aim ≤ 60): $title"
     [ "$tl" -lt 15 ] && issue warn "$rel" "title is only $tl chars: $title"
   fi
   [ -z "$desc" ] && [ "$noindex" = 0 ] && issue warn "$rel" "missing meta description"
   if [ -n "$desc" ]; then
-    dl=${#desc}
     [ "$dl" -gt 160 ] && issue warn "$rel" "meta description is $dl chars (aim 70–160)"
     [ "$dl" -lt 70 ] && issue warn "$rel" "meta description is only $dl chars (aim 70–160)"
   fi

@@ -50,7 +50,7 @@ check "missing title is an error"         'has "$out" "error index.html: missing
 fresh; T="Cafes in Lagos — every independent coffee place, bakery and brunch spot" page "$S/index.html"; out=$(scan)
 check "title > 60 chars warns"            'has "$out" "warn  index.html: title is"'
 fresh; T="Cafes in Lagos — every independent coffee place, bakery and brunc" page "$S/index.html"; out=$(scan)
-check "title length counts characters"   'has "$out" "title is 67 chars"'
+check "title length counts characters, not bytes" 'has "$out" "title is 65 chars"'
 fresh; T="$(printf 'x%.0s' $(seq 60))" page "$S/index.html"; out=$(scan)
 check "title of exactly 60 is fine"       '! has "$out" "title is"'
 fresh; T="Cafes" page "$S/index.html"; out=$(scan)

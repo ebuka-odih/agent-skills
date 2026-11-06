@@ -2,7 +2,7 @@
 
 ## 1.2.0 — 2026-11-06
 - New plugin `seo` 0.1.0 (technical SEO; content/growth stays a separate plugin): `seo-architecture` (orchestrator → docs/seo/SEO.md), `on-page`, `structured-data`, `programmatic-seo` (indexation thresholds), `international` (hreflang).
-- `seo-scan.sh <build-dir> --base <url> [--strict]` audits built HTML: title/description/canonical/h1/lang/OG, JSON-LD validity, hreflang codes + reciprocity + x-default, site-wide duplicates, robots.txt `Disallow: /`, sitemap coverage and noindex pages in sitemaps. One perl pass per page. 64 tests; mutation 41/41 (100%).
+- `seo-scan.sh <build-dir> --base <url> [--strict]` audits built HTML: title/description/canonical/h1/lang/OG, JSON-LD validity, hreflang codes + reciprocity + x-default, site-wide duplicates, robots.txt `Disallow: /`, sitemap coverage and noindex pages in sitemaps. One perl pass per page; lengths counted in characters (not bytes) in any locale. 64 tests; mutation 41/41 (100%).
 - Tooling: mutation runner gains an `&& issue error|warn` → no-op operator for report-style scanners; `run-all-tests.sh` mutates seo-scan.
 - 3 eval cases (seo-plan-from-spec, audit-built-site, local-business-jsonld) — not yet run: usage limit hit; scheduled for after reset.
 
