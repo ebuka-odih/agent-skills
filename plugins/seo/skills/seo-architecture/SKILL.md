@@ -1,6 +1,6 @@
 ---
 name: seo-architecture
-description: Entry point for technical SEO — decide how pages are rendered for crawlers (SSR, static/prerender, SPA), design URLs, set the indexation policy (what's indexable, canonical rules, noindex thresholds for thin pages), plan sitemaps and robots.txt, and record it in docs/seo/SEO.md; then audit the built site with seo-scan.sh and gate CI. Use when launching a public site or app pages, when the user says "SEO", "make this rank", "Google isn't indexing", "sitemap", "canonical", "SEO architecture", "programmatic pages", or before adding public pages. Routes to on-page, structured-data, programmatic-seo and international.
+description: Entry point for technical SEO — decide how pages are rendered for crawlers (SSR, static/prerender, SPA), design URLs, set the indexation policy (what's indexable, canonical rules, noindex thresholds for thin pages), plan sitemaps and robots.txt, and record it in docs/seo/SEO.md; then audit the built site with seo-scan.sh and gate CI. Use when launching a public site or app pages, when the user says "SEO", "make this rank", "Google isn't indexing", "sitemap", "canonical", "SEO architecture", "programmatic pages", or before adding public pages. Routes to keyword-research, search-console, page-speed, site-audit, on-page, structured-data, programmatic-seo and international.
 ---
 
 # SEO architecture (orchestrator)
@@ -13,8 +13,13 @@ seo/skills/
 ├── on-page/           titles, descriptions, canonicals, headings, Open Graph, internal links, images
 ├── structured-data/   JSON-LD per page type, validation
 ├── programmatic-seo/  template pages from data (city × category…), thin-content guards
-└── international/     locales, hreflang, x-default, currency/date formats
+├── international/     locales, hreflang, x-default, currency/date formats
+├── keyword-research/  queries → intent → one target page each (keyword map)
+├── search-console/    rankings, CTR, striking distance, traffic-drop diagnosis (gsc-report.sh)
+├── page-speed/        Core Web Vitals field + lab via PageSpeed Insights (page-speed.sh)
+└── site-audit/        crawl the live site: status, redirects, hosts, noindex + seo-scan (seo-crawl.sh)
 ```
+Terms: [references/glossary.md](references/glossary.md).
 Related: Core Web Vitals → `frontend:frontend-performance` · CI gate → `devops:ci` · which pages matter → `docs/spec/SPEC.md` (product).
 
 **Output:** `docs/seo/SEO.md` (from [templates/SEO.md](templates/SEO.md)).
@@ -23,9 +28,10 @@ Related: Core Web Vitals → `frontend:frontend-performance` · CI gate → `dev
 1. **Which pages should rank?** From SPEC.md journeys and the user: list page types (home, category, place/product, article, landing, programmatic). Mark each indexable or not (dashboards, auth, search results with arbitrary params are usually not).
 2. **Rendering** per page type — [references/rendering.md](references/rendering.md). Indexable pages must ship meaningful HTML (title, meta, main content, links) without running JavaScript.
 3. **URLs and indexation** — [references/urls-and-indexing.md](references/urls-and-indexing.md): one canonical URL per thing, lowercase-hyphenated paths, parameter handling, noindex rules, sitemap and robots.txt.
-4. **Per-page rules** → `on-page`; **rich results** → `structured-data`; **pages generated from data** → `programmatic-seo`; **multiple languages/regions** → `international`.
+4. **What to rank for** → `keyword-research`; **per-page rules** → `on-page`; **rich results** → `structured-data`; **pages generated from data** → `programmatic-seo`; **multiple languages/regions** → `international`.
 5. **Audit the build** — `bash "${CLAUDE_PLUGIN_ROOT}/scripts/seo-scan.sh" <build-dir> --base https://example.com` (prerendered/static HTML). Fix errors; add `--strict` as a CI step after the build (devops `ci`).
-6. **Write SEO.md** and add to CLAUDE.md/AGENTS.md: `SEO: docs/seo/SEO.md — read before adding public pages or changing URLs.`
+6. **After launch** — live crawl → `site-audit`; rankings and drops → `search-console`; speed → `page-speed`.
+7. **Write SEO.md** and add to CLAUDE.md/AGENTS.md: `SEO: docs/seo/SEO.md — read before adding public pages or changing URLs.`
 
 House defaults: [references/defaults.md](references/defaults.md).
 

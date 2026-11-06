@@ -21,7 +21,9 @@ issue() { # severity file message
 parse() {
   perl -0777 -ne '
     sub attr { my ($tag, $name) = @_; return $tag =~ /\b$name\s*=\s*["\x27]([^"\x27]*)["\x27]/i ? $1 : undef }
-    sub flat { my $v = shift // ""; $v =~ s/\s+/ /g; $v =~ s/^ | $//g; return $v }
+    sub flat { my $v = shift // ""; $v =~ s/\s+/ /g; $v =~ s/^ | $//g;
+      $v =~ s/&#x([0-9a-f]+);/chr(hex $1)/gie; $v =~ s/&#(\d+);/chr $1/ge;   # entities count as one character
+      my %e = (amp=>"&", lt=>"<", gt=>">", quot=>"\"", apos=>"\x27", nbsp=>" "); $v =~ s/&(amp|lt|gt|quot|apos|nbsp);/$e{$1}/g; return $v }
     sub chars { my $v = shift; utf8::decode($v); return length $v }   # characters, not bytes, in any locale
     my $h = $_;
     print "title\t", flat($1), "\n" while $h =~ /<title[^>]*>(.*?)<\/title>/gis;

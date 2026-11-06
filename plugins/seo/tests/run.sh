@@ -187,6 +187,177 @@ echo "messy HTML"
 fresh; printf "<html lang='en'><head><title>Cafes in Lagos — minified page</title><meta content='%s' name='description'><link href='%s/' rel='canonical'><meta property='og:title' content='a'><meta property='og:description' content='b'><meta property='og:image' content='%s/o.png'></head><body><H1 class='x'>A</H1></body></html>" "$DESC_OK" $B $B > "$S/index.html"; out=$(scan)
 check "single quotes, attr order, caps"   'has "$out" "Result: 0 error(s), 0 warning(s)"'
 
+# ======================================================================= gsc-report.sh
+GSC="$ROOT/scripts/gsc-report.sh"
+echo "gsc-report"
+G="$TMP/gsc"; mkdir -p "$G"
+{ echo "Date,Clicks,Impressions,CTR,Position"
+  for i in $(seq 1 40); do d=$(printf 'd%03d' "$i"); if [ "$i" -le 30 ]; then echo "$d,30,4000,0.75%,13.2"; else echo "$d,1,100,1%,15"; fi; done; } > "$G/Dates.csv"
+printf '%s\n' 'Top queries,Clicks,Impressions,CTR,Position' '"pharmacy in wuse, abuja",12,"1,800",0.67%,6.4' 'brand name,40,90,44.4%,1.1' 'hospitals lagos,3,900,0.33%,2.2' 'rare query,0,10,0%,8' 'deep query,0,700,0%,35' 'pos four,20,60,33%,4' 'pos twenty,1,55,1.8%,20' 'pos 3.9,1,500,0.2%,3.9' > "$G/Queries.csv"
+printf '%s\n' 'Top pages,Clicks,Impressions,CTR,Position' 'https://x.test/,50,500,10%,3' 'https://x.test/a,0,300,0%,24' 'https://x.test/b,0,20,0%,30' > "$G/Pages.csv"
+out=$(bash "$GSC" "$G")
+check "trend compares last 7 vs before"   'has "$out" "last 7 days avg: 1.0 clicks, 100 impressions/day"'
+check "flags a halving as DROP"           'has "$out" "DROP: impressions fell by half"'
+check "finds the first day of the drop"   'has "$out" "drop starts d031"'
+check "striking distance includes 6.4"    'grep -A3 "Striking distance" <<<"$out" | grep -q "pharmacy in wuse, abuja"'
+check "quoted query with comma parsed"    'has "$out" "pharmacy in wuse, abuja"'
+check "1,800 parsed as 1800"              'grep "pharmacy" <<<"$out" | head -1 | grep -q " 1800 impr"'
+check "positions 4 and 20 are included"   'grep -A8 "Striking distance" <<<"$out" | grep -q "pos four" && grep -A8 "Striking distance" <<<"$out" | grep -q "pos twenty"'
+check "position 3.9 and 35 excluded"      '! sed -n "/Striking/,/Low CTR/p" <<<"$out" | grep -qE "pos 3.9|deep query"'
+check "below min impressions excluded"    '! has "$out" "rare query"'
+check "low CTR at position 2"             'sed -n "/Low CTR/,/Top pages/p" <<<"$out" | grep -q "hospitals lagos"'
+check "good CTR not flagged"              '! sed -n "/Low CTR/,/Top pages/p" <<<"$out" | grep -qE "brand name|pos four"'
+check "low CTR shows benchmark"           'has "$out" "(benchmark ~15%)"'
+check "pages with impressions, 0 clicks"  'sed -n "/0 clicks/,\$p" <<<"$out" | grep -q "https://x.test/a"'
+check "small zero-click page ignored"     '! sed -n "/0 clicks —/,\$p" <<<"$out" | grep -q "x.test/b"'
+out=$(bash "$GSC" "$G" --min-impressions 1000)
+check "--min-impressions raises the bar"  'has "$out" "pharmacy" && ! sed -n "/Low CTR/,/Top pages/p" <<<"$out" | grep -q "hospitals"'
+(cd "$G" && zip -q "$TMP/gsc.zip" Dates.csv Queries.csv Pages.csv)
+zout=$(bash "$GSC" "$TMP/gsc.zip")
+check "reads a .zip export"               'has "$zout" "drop starts d031"'
+mkdir -p "$TMP/flat"; { echo "Date,Clicks,Impressions,CTR,Position"; for i in $(seq 1 40); do printf 'd%03d,30,4000,0.75%%,13\n' "$i"; done; } > "$TMP/flat/Dates.csv"
+out=$(bash "$GSC" "$TMP/flat")
+check "steady traffic: no DROP"           '! has "$out" "DROP" && ! has "$out" "drop starts"'
+mkdir -p "$TMP/none"
+check "no CSVs: exit 2"                   'bash "$GSC" "$TMP/none" >/dev/null; [ $? = 2 ]'
+
+# ======================================================================= page-speed.sh
+PS="$ROOT/scripts/page-speed.sh"
+echo "page-speed"
+psi() { # file lcp inp cls(x100) ttfb level(url|origin|none) labLCP labTBT labCLS
+  local field=""
+  [ "$6" != none ] && field="\"metrics\":{\"LARGEST_CONTENTFUL_PAINT_MS\":{\"percentile\":$2},\"INTERACTION_TO_NEXT_PAINT\":{\"percentile\":$3},\"CUMULATIVE_LAYOUT_SHIFT_SCORE\":{\"percentile\":$4},\"EXPERIMENTAL_TIME_TO_FIRST_BYTE\":{\"percentile\":$5}}"
+  local le="{}" ole="{}"; [ "$6" = url ] && le="{$field}"; [ "$6" = origin ] && ole="{$field}"
+  cat > "$1" <<J
+{"id":"https://x.test/","loadingExperience":$le,"originLoadingExperience":$ole,
+ "lighthouseResult":{"finalDisplayedUrl":"https://x.test/","configSettings":{"formFactor":"mobile"},"categories":{"performance":{"score":0.42}},
+  "audits":{"largest-contentful-paint":{"score":0.1,"numericValue":$7},"total-blocking-time":{"score":0.5,"numericValue":$8},"cumulative-layout-shift":{"score":1,"numericValue":$9},
+   "first-contentful-paint":{"score":0.8,"numericValue":1500},"server-response-time":{"score":0.5,"numericValue":900},
+   "render-blocking-insight":{"title":"Render-blocking requests","score":0,"metricSavings":{"LCP":1200,"FCP":900}},
+   "image-delivery-insight":{"title":"Improve image delivery","score":0.5,"details":{"overallSavingsMs":2400}},
+   "layout-shift-culprits":{"title":"Layout shift culprits","score":0,"metricSavings":{"CLS":0.3}},
+   "passed-audit":{"title":"Already fine","score":1,"metricSavings":{"LCP":5000}}}}}
+J
+}
+psi "$TMP/good.json" 2000 150 5 600 url 2400 100 0.02
+out=$(bash "$PS" --from-json "$TMP/good.json")
+check "field LCP 2.0 s good"              'has "$out" "LCP   2.0 s     good"'
+check "field INP 150 ms good"             'has "$out" "INP   150 ms    good"'
+check "field CLS percentile/100"          'has "$out" "CLS   0.05      good"'
+check "url-level field data"              'has "$out" "p75, url-level"'
+check "performance score shown"           'has "$out" "performance score 42"'
+check "fixes sorted by savings"           '[ "$(grep -n "Improve image delivery" <<<"$out" | cut -d: -f1)" -lt "$(grep -n "Render-blocking" <<<"$out" | cut -d: -f1)" ]'
+check "overallSavingsMs used"             'has "$out" "Improve image delivery — ~2400 ms"'
+check "metricSavings max used"            'has "$out" "Render-blocking requests — ~1200 ms"'
+check "passed audits and CLS-only hidden" '! has "$out" "Already fine" && ! has "$out" "Layout shift culprits"'
+check "good page passes --strict"         'bash "$PS" --from-json "$TMP/good.json" --strict >/dev/null'
+psi "$TMP/bad.json" 4100 501 26 1900 url 2400 100 0.02
+out=$(bash "$PS" --from-json "$TMP/bad.json")
+check "LCP 4.1 s poor"                    'has "$out" "LCP   4.1 s     poor"'
+check "INP 501 ms poor"                   'has "$out" "INP   501 ms    poor"'
+check "CLS 0.26 poor"                     'has "$out" "CLS   0.26      poor"'
+check "TTFB 1.9 s poor"                   'has "$out" "TTFB  1.9 s     poor"'
+check "poor field fails --strict"         '! bash "$PS" --from-json "$TMP/bad.json" --strict >/dev/null'
+psi "$TMP/edge.json" 2500 200 10 800 url 4000 200 0.1
+out=$(bash "$PS" --from-json "$TMP/edge.json")
+check "boundaries are good (2.5s/200ms/0.1/0.8s)" '[ "$(grep -cE "(LCP|INP|CLS|TTFB) .* good" <<<"$(sed -n "/field/,/lab/p" <<<"$out")")" = 4 ]'
+check "lab LCP 4.0 s needs-improvement"   'sed -n "/lab/,\$p" <<<"$out" | grep -q "LCP   4.0 s     needs-improvement"'
+psi "$TMP/edge2.json" 2501 201 11 801 url 4001 601 0.26
+out=$(bash "$PS" --from-json "$TMP/edge2.json")
+check "just over: needs-improvement"      '[ "$(sed -n "/field/,/lab/p" <<<"$out" | grep -c needs-improvement)" = 4 ]'
+check "TTFB poor never fails --strict"    'psi "$TMP/t.json" 2000 150 5 5000 url 2000 100 0.01; bash "$PS" --from-json "$TMP/t.json" --strict >/dev/null'
+psi "$TMP/origin.json" 2000 150 5 600 origin 2000 100 0.01
+out=$(bash "$PS" --from-json "$TMP/origin.json")
+check "falls back to origin field data"   'has "$out" "p75, origin-level"'
+psi "$TMP/nofield.json" 0 0 0 0 none 4500 700 0.3
+out=$(bash "$PS" --from-json "$TMP/nofield.json")
+check "no field data says so"             'has "$out" "no CrUX data"'
+check "no field: lab poor fails --strict" '! bash "$PS" --from-json "$TMP/nofield.json" --strict >/dev/null'
+check "with field: lab poor is not strict" 'psi "$TMP/lf.json" 2000 150 5 600 url 9000 900 0.5; bash "$PS" --from-json "$TMP/lf.json" --strict >/dev/null'
+echo '{"error":{"message":"Quota exceeded"}}' > "$TMP/err.json"
+out=$(bash "$PS" --from-json "$TMP/err.json")
+printf '#!/usr/bin/env bash\nfor a in "$@"; do case "$a" in --output-path=*) cp "%s" "${a#--output-path=}" ;; esac; done\n' "$TMP/lhraw.json" > "$TMP/fake-lh"; chmod +x "$TMP/fake-lh"
+jq '.lighthouseResult' "$TMP/good.json" > "$TMP/lhraw.json"
+out=$(SEO_LIGHTHOUSE_CMD="$TMP/fake-lh" bash "$PS" https://x.test/ --lighthouse)
+check "--lighthouse wraps a local run"    'has "$out" "performance score 42" && has "$out" "no CrUX data"'
+out=$(SEO_LIGHTHOUSE_CMD="/nonexistent/lh" bash "$PS" https://x.test/ --lighthouse)
+check "--lighthouse without the tool"     'has "$out" "no /nonexistent/lh"'
+check "API error is reported"             'bash "$PS" --from-json "$TMP/err.json" > "$TMP/err.out"; grep -q "Quota exceeded" "$TMP/err.out"'
+check "no args: usage, exit 2"            'bash "$PS" >/dev/null; [ $? = 2 ]'
+
+# ======================================================================= seo-crawl.sh
+CR="$ROOT/scripts/seo-crawl.sh"
+echo "seo-crawl (local test server)"
+python3 "$ROOT/tests/fixtures/server.py" "$TMP/port" & SRV=$!
+for _ in $(seq 1 50); do [ -s "$TMP/port" ] && break; sleep 0.1; done
+PORT=$(cat "$TMP/port"); O="http://127.0.0.1:$PORT"
+out=$(SEO_CRAWL_SLOW_MS=400 bash "$CR" "$O" --no-hosts --max 20 --out "$TMP/crawl" 2>&1); rc=$?
+kill "$SRV" 2>/dev/null; wait "$SRV" 2>/dev/null
+check "crawl exits 0 without --strict"    '[ "$rc" = 0 ]'
+check "finds the canonical origin"        'has "$out" "canonical host: $O"'
+check "two User-agent: * groups"          'has "$out" "2 separate '"'"'User-agent: *'"'"' groups"'
+check "missing child sitemap is high"     'has "$out" "high     $O/sitemaps/missing.xml: child sitemap returns 404"'
+check "counts sitemap URLs"               'has "$out" "$O/sitemaps/pages.xml: 8 URL(s)"'
+check "foreign-host sitemap URL"          'has "$out" "lists URLs on another host, e.g. https://elsewhere.test/x"'
+check "404 in sitemap is high"            'has "$out" "high     $O/gone: returns 404 — listed in the sitemap"'
+check "redirecting sitemap URL is high"   'has "$out" "$O/older: sitemap URL redirects (2 hop(s)) to $O/a"'
+check "redirect chain is medium"          'has "$out" "medium   $O/older: redirect chain of 2 hops"'
+check "X-Robots-Tag noindex is critical"  'has "$out" "critical $O/hidden: X-Robots-Tag header says noindex"'
+check "slow TTFB is medium"               'grep -q "medium   $O/slow: slow first byte" <<<"$out"'
+check "fast pages not slow"               '! has "$out" "$O/a: slow"'
+check "client-rendered shell is high"     'has "$out" "high     $O/shell: client-rendered shell"'
+check "foreign-host URL not fetched"      '! has "$out" "elsewhere.test/x: returns"'
+check "content page is not a shell"       '! has "$out" "$O/a: client-rendered"'
+check "saves fetched pages"               '[ -f "$TMP/crawl/index.html" ] && [ -f "$TMP/crawl/a/index.html" ] && [ ! -f "$TMP/crawl/gone/index.html" ]'
+check "saves robots + merged sitemap"     '[ -f "$TMP/crawl/robots.txt" ] && grep -q "<loc>$O/a</loc>" "$TMP/crawl/sitemap.xml"'
+check "runs seo-scan on fetched HTML"     'has "$out" "== On-page" && has "$out" "shell/index.html: no <h1>"'
+check "summary counts"                    'has "$out" "Crawl result: 1 critical, 5 high, 2 medium, 1 low."'
+python3 "$ROOT/tests/fixtures/server.py" "$TMP/port2" & SRV=$!
+for _ in $(seq 1 50); do [ -s "$TMP/port2" ] && break; sleep 0.1; done
+check "--strict exits 1 on high"          '! bash "$CR" "http://127.0.0.1:$(cat "$TMP/port2")" --no-hosts --max 3 >/dev/null 2>&1 --strict'
+kill "$SRV" 2>/dev/null; wait "$SRV" 2>/dev/null
+srv() { # mode [target] → sets SP (pid) and SURL
+  local pf="$TMP/port.$RANDOM$RANDOM"
+  python3 "$ROOT/tests/fixtures/server.py" "$pf" "$1" "${2:-}" & SP=$!
+  for _ in $(seq 1 50); do [ -s "$pf" ] && break; sleep 0.1; done
+  SURL="http://127.0.0.1:$(cat "$pf")"; PIDS="${PIDS:-} $SP"
+}
+stopall() { for p in ${PIDS:-}; do kill "$p" 2>/dev/null; wait "$p" 2>/dev/null; done; PIDS=""; }
+
+srv clean; C="$SURL"
+out=$(bash "$CR" "$C" --no-hosts --max 10 --strict 2>&1); rc=$?
+check "clean site passes --strict"        '[ "$rc" = 0 ] && has "$out" "Crawl result: 0 critical, 0 high, 0 medium, 0 low."'
+check "200 chars without h1 is not a shell" '! has "$out" "edge200: client-rendered"'
+check "one robots group is not flagged"   '! has "$out" "separate '"'"'User-agent"'
+check "no redirect marker on 200 rows"    '! has "$out" "↪"'
+srv v200; V200="$SURL"; srv v301 "$C"; V301="$SURL"; srv v302 "$C"; V302="$SURL"; srv v301x; V301X="$SURL"
+out=$(SEO_CRAWL_VARIANTS="$V200 $V301 $V302 $V301X $C" bash "$CR" "$C" --max 3 2>&1)
+check "variant serving 200 is high"       'has "$out" "high     $V200/: also serves 200 — duplicate host"'
+check "variant 301 to canonical is fine"  'has "$out" "  $V301/ → 301 $C/"'
+check "variant 302 is medium"             'has "$out" "medium   $V302/: temporary redirect (302)"'
+check "variant 301 elsewhere is a chain"  'has "$out" "medium   $V301X/: redirects to https://elsewhere.test/"'
+check "canonical itself is skipped"       '! has "$out" "$C/: also serves"'
+check "--no-hosts skips variants"         '! SEO_CRAWL_VARIANTS="$V200" bash "$CR" "$C" --max 3 --no-hosts 2>&1 | grep -q "also serves 200"'
+srv edge; E="$SURL"
+out=$(bash "$CR" "$E" --no-hosts --max 10 2>&1)
+check "robots blocking JS is high"        'has "$out" "high     robots.txt: blocks CSS/JS"'
+check "199 chars without h1 is a shell"   'has "$out" "$E/edge199: client-rendered shell: 199 characters"'
+check "one hop: redirect, not a chain"    'has "$out" "$E/old: sitemap URL redirects (1 hop(s))" && ! has "$out" "$E/old: redirect chain"'
+check "404 after redirect says so"        'has "$out" "$E/oldgone: returns 404 after 1 redirect(s)"'
+check "redirected row marked ↪1"          'grep "$E/old$" <<<"$out" | grep -q "↪1"'
+check "--strict fails on high"            '! bash "$CR" "$E" --no-hosts --max 10 --strict >/dev/null 2>&1'
+srv many; M="$SURL"
+out=$(bash "$CR" "$M" --no-hosts --max 2 2>&1)
+check "reads the 50th child sitemap"      'has "$out" "$M/s/50.xml: 1 URL(s)"'
+check "stops after 50 child sitemaps"     '! has "$out" "$M/s/51.xml:"'
+srv down; Dn="$SURL"
+out=$(bash "$CR" "$Dn" --no-hosts --max 5 2>&1)
+check "home not 200 is critical"          'has "$out" "critical $Dn/: home page returns 503"'
+check "empty sitemap is high"             'has "$out" "high     sitemap: no URLs found"'
+stopall
+
+check "bad URL: usage, exit 2"            'bash "$CR" example.com >/dev/null; [ $? = 2 ]'
+
 echo
 echo "$pass passed, $fail failed"
 [ "$fail" = 0 ]

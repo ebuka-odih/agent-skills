@@ -35,3 +35,15 @@ Locales: <…> · URL scheme: <subfolder /en-ng/> · hreflang + x-default: <yes/
 ## Redirects log
 | Date | From | To | Why |
 |---|---|---|---|
+
+## Keywords (keyword-research)
+| Cluster | Intent | Target URL | Primary phrase | Pos now | Impressions/mo | Action |
+|---|---|---|---|---|---|---|
+
+## Speed (page-speed) — field p75, mobile
+| Template | URL | LCP | INP | CLS | TTFB | Top fix |
+|---|---|---|---|---|---|---|
+
+## Changes log
+| Date | Change | Expected effect | Result (2–4 weeks later) |
+|---|---|---|---|

@@ -2,12 +2,16 @@
 
 Each domain is one plugin. Each line under it is one skill. Orchestrator first.
 
-## ✅ seo (0.1)
+## ✅ seo (0.2)
 - `seo-architecture` — orchestrator: rendering, URLs, indexation, SEO.md
 - `on-page` — head tags per page + stack snippets
 - `structured-data` — schema.org types per page, JSON-LD from data
 - `programmatic-seo` — templates, indexation thresholds
 - `international` — locale scheme, hreflang
+- `keyword-research` — intent, clusters, one URL each, keyword map
+- `search-console` — rankings, striking distance, CTR, drop diagnosis
+- `page-speed` — Core Web Vitals field + lab, fixes by savings
+- `site-audit` — live crawl: hosts, robots, sitemaps, redirects, noindex, shells
 - Next: `growth` plugin (content briefs, posts, distribution) — separate from technical SEO
 
 ## ✅ frontend (0.1)

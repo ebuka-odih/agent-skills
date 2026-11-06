@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.3.0 — 2026-11-06
+- `seo` 0.2.0: new skills `keyword-research` (intent, clusters → one URL, scoring, cannibalization), `search-console` (striking distance, CTR vs position, traffic-drop diagnosis by shape), `page-speed` (Core Web Vitals field p75 + lab, fixes by savings), `site-audit` (live crawl); SEO glossary; SEO.md template gains keyword map, speed table and changes log.
+- New scripts: `seo-crawl.sh` (host variants, robots.txt groups, sitemap index, status/redirects/X-Robots-Tag/TTFB/client-rendered shells, then seo-scan on the fetched HTML), `gsc-report.sh` (Search Console export: trend, drop start date, striking distance, low CTR, zero-click pages), `page-speed.sh` (PageSpeed Insights API, `--from-json`, `--lighthouse`, `--strict`).
+- `seo-scan.sh`: HTML entities count as one character.
+- Tests 64 → 150 (local test server with clean/edge/down/host-variant modes). Mutation: seo-scan 44/44, gsc-report 2/2, page-speed 8/8, seo-crawl 28/30 (2 equivalent: unreachable `per < 1`, TTFB equal to the threshold). Mutation found 17 crawler gaps (host variants, home down, empty sitemap, robots blocking JS, 404 after redirect, 50-sitemap cap) — all now tested; tests found the shell check counting surrounding spaces.
+- Tooling: mutation runner neutralises `issue`/`finding` report calls in any position.
+- 4 new eval cases (traffic-drop, keyword-map, speed-priorities, audit-handoff) — not yet run (usage limit).
+- Run read-only against two live sites; findings handed to the projects' agents.
+
 ## 1.2.0 — 2026-11-06
 - New plugin `seo` 0.1.0 (technical SEO; content/growth stays a separate plugin): `seo-architecture` (orchestrator → docs/seo/SEO.md), `on-page`, `structured-data`, `programmatic-seo` (indexation thresholds), `international` (hreflang).
 - `seo-scan.sh <build-dir> --base <url> [--strict]` audits built HTML: title/description/canonical/h1/lang/OG, JSON-LD validity, hreflang codes + reciprocity + x-default, site-wide duplicates, robots.txt `Disallow: /`, sitemap coverage and noindex pages in sitemaps. One perl pass per page; lengths counted in characters (not bytes) in any locale. 64 tests; mutation 41/41 (100%).
