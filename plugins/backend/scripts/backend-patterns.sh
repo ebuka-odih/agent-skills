@@ -69,6 +69,14 @@ be_scan_file() {
         /threading\.Thread\(/ { thread = NR } /asyncio\.run\(|new_event_loop\(/ { loop = NR }
         /autoretry_for/ && !/retry_backoff/ { print "warn " path ":" NR " J3: Celery autoretry without retry_backoff — failures retry immediately" }
         /cron_jobs[[:space:]]*=/ { cron = NR }
+        /^[[:space:]]*if (not )?\(?(await )?[A-Za-z_.]*(taken|exists?|existing|already|duplicate|found)[A-Za-z_]*/ { chk = NR }
+        { if (chk && NR > chk && NR - chk <= 6 && $0 ~ /\.add\(|\.create\(|insert\(|INSERT INTO/) { c1[++n1] = chk; chk = 0 } }
+        /ON CONFLICT|on_conflict_do|IntegrityError|UniqueViolation/ { uniq_guard = 1 }
+        { if ($0 ~ /\.(balance|stock|credits|quantity|quota|remaining|available|seats|inventory)[[:space:]]*[-+]=/) c2[++n2] = NR }
+        /with_for_update|FOR UPDATE|advisory_lock|_lock_[a-z_]*\(/ { row_lock = 1 }
+        /while True:/ { wt = NR; poll = 0 }
+        { if (wt && NR > wt && NR - wt <= 25 && $0 ~ /sleep\(/) poll = 1 }
+        /signal\.|stop_event|_stop|stopping|should_stop|is_set\(|CancelledError|shutdown|\.cancel\(/ { stopper = 1 }
         {
           if ($0 ~ /requests\.(get|post|put|patch|delete|head|request)\(/) { call = NR; buf = $0; open = 1 }
           else if (open && NR - call <= 4) buf = buf $0
@@ -77,11 +85,24 @@ be_scan_file() {
         { if (has_async && $0 ~ /time\.sleep\(/) print "warn " path ":" NR " J5: time.sleep in async code blocks the event loop — await asyncio.sleep" }
         END {
           if (thread && loop) print "warn " path ":" thread " J6: thread running its own event loop — it must not use the app'"'"'s async engine/pool/clients (they hang on another loop); run it as an asyncio task on the app loop or give it its own engine"
+          oneoff = (path ~ /(^|\/)(scripts|tools|seeds?|maintenance)\// || path ~ /seed[^\/]*\.py$/) ? "info " : "warn "   # one-off scripts: worth a look, not a gate
+          if (!uniq_guard) for (i = 1; i <= n1; i++) print oneoff path ":" c1[i] " C1: check-then-insert — two requests can both pass the check; add a unique constraint and catch the violation (or ON CONFLICT)"
+          if (!row_lock) for (i = 1; i <= n2; i++) print "warn " path ":" c2[i] " C2: read-modify-write on a counter — concurrent updates are lost; use one atomic UPDATE … SET x = x - :n WHERE x >= :n (or lock the row first)"
+          if (wt && poll && !stopper) print oneoff path ":" wt " G1: polling loop (while True + sleep) with no stop condition — SIGTERM kills it mid-job; check a stop flag/event before each unit of work"
           if (cron) print "info " path ":" cron " S2: arq cron_jobs only fire in a deployed arq worker — check the deploy config (be_scan_repo reports it)"
         }' "$f" ;;
     php)
       awk -v path="$p" '
         { if ($0 ~ /(Schedule::|\$schedule->)(job|command|call|exec)\(/ && $0 !~ /withoutOverlapping/) print "warn " path ":" NR " S1: scheduled task without ->withoutOverlapping() — a slow run overlaps the next" }
+        /->exists\(\)|->first\(\)|->count\(\)/ && /if[[:space:]]*\(/ { chk = NR }
+        { if (chk && NR > chk && NR - chk <= 6 && $0 ~ /::create\(|->save\(\)|->insert\(/) { c1[++n1] = chk; chk = 0 } }
+        /UniqueConstraintViolation|QueryException|upsert\(|insertOrIgnore\(|firstOrCreate\(|updateOrCreate\(/ { uniq_guard = 1 }
+        { if ($0 ~ /->(balance|stock|credits|quantity|quota|remaining|available|seats|inventory)[[:space:]]*[-+]=/) c2[++n2] = NR }
+        /lockForUpdate\(|sharedLock\(|Cache::lock\(/ { row_lock = 1 }
+        END {
+          if (!uniq_guard) for (i = 1; i <= n1; i++) print "warn " path ":" c1[i] " C1: check-then-insert — two requests can both pass the check; add a unique index and catch UniqueConstraintViolationException (or upsert)"
+          if (!row_lock) for (i = 1; i <= n2; i++) print "warn " path ":" c2[i] " C2: read-modify-write on a counter — use ->decrement()/->increment() with a where guard, or lockForUpdate() in a transaction"
+        }
       ' "$f" ;;
   esac
 }
@@ -94,6 +115,15 @@ be_scan_repo() {
   if [ -n "$arqcron" ] && ! { [ -n "$deploy" ] && grep -lE '(^|[^a-z])arq[[:space:]]' $deploy >/dev/null 2>&1; }; then
     echo "error ${arqcron#"$d"/}:1 S2: arq cron_jobs defined but no deploy file starts an arq worker — these jobs never run"
   fi
+  local c
+  for c in $(find "$d" -maxdepth 3 -name '*compose*.y*ml' -not -path '*/node_modules/*' 2>/dev/null); do
+    awk -v path="${c#"$d"/}" '
+      /^  [A-Za-z0-9_.-]+:[[:space:]]*$/ { if (svc != "" && worker && !grace) print "warn " path ":" line " G2: worker service \"" svc "\" has no stop_grace_period — Docker kills it after 10 s, mid-job"; svc = $1; sub(/:$/, "", svc); line = NR; worker = 0; grace = 0 }
+      /command:|entrypoint:/ && /(worker|queue:work|horizon|arq |celery|rq worker|dramatiq)/ { worker = 1 }
+      /stop_grace_period:/ { grace = 1 }
+      END { if (svc != "" && worker && !grace) print "warn " path ":" line " G2: worker service \"" svc "\" has no stop_grace_period — Docker kills it after 10 s, mid-job" }
+    ' "$c"
+  done
   local beat; beat=$(grep -rlE 'beat_schedule' --include='*.py' "$d" 2>/dev/null | grep -vE '/(\.venv|venv|site-packages)/' | head -1)
   if [ -n "$beat" ] && ! { [ -n "$deploy" ] && grep -lE 'celery.*beat' $deploy >/dev/null 2>&1; }; then
     echo "error ${beat#"$d"/}:1 S3: Celery beat_schedule defined but no deploy file runs celery beat — these tasks never run"

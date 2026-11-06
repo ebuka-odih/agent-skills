@@ -28,6 +28,16 @@ tools/bench/bench.sh run --case my-app-login-bug --runs 2      # → bench-resul
 | `llm` | A rubric for what the tests can't see (right place, no duplication, edge cases). The judge also gets the shipped diff, as a reference rather than the only right answer. |
 | `plugins` | The domains a skilled developer would reach for on this task. The `without` arm loads none. |
 
+## Prevention cases — do the skills stop bugs before they happen?
+Fix cases ("this is broken, fix it") mostly test the model: the task describes the bug. The skills exist to **prevent** bugs. Prevention cases replay the moment *before* a bug was written:
+
+| Kind | Base commit | Task | Scored by |
+|---|---|---|---|
+| `prevention-build` | the parent of the commit that **introduced** a bug later fixed | the original feature request, in the original vague words; no hint about the bug | the feature's own tests (hidden) + an LLM judge that knows the later-fixed bug and checks the new code avoids it |
+| `prevention-review` | the parent of the **fix** | "review this module for production risks, write REVIEW.md, don't change code" | an LLM judge checking REVIEW.md finds the bug(s) the project fixed later |
+
+Finding them: `git log -S'<symbol>'` gives the commit that added the code a later `fix:` repaired. Add `"kind"` and `"later_fix"` to case.json (`later_fix` is a note for humans). The shipped version is the baseline: it *did* have the bug, so a "with plugins" PASS is a real prevented incident.
+
 ## How the arms differ
 Both arms run `claude -p` in a fresh clone with `--setting-sources project,local`, so your user-level plugins and settings are excluded from both. Project settings such as the repo's own `CLAUDE.md` and `.claude/` load in both arms. The `with` arm adds `--plugin-dir plugins/<name>` for each plugin listed in the case. Permissions are `acceptEdits` plus `Bash Read Edit Write Glob Grep Skill`, and the clone has no git remote.
 

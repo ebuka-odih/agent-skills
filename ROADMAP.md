@@ -8,7 +8,9 @@ Each domain is one plugin. Each line under it is one skill. Orchestrator first.
 - `migrations` — zero-downtime patterns
 - `background-jobs` — job contract, Postgres queues, runners, schedulers, event loops
 - `integrations` — outbound policy, circuit breaker, webhooks
-- Next: uptime & outage behaviour (503 + Retry-After, health/readiness, alerts)
+- `concurrency` — idempotency, constraints, optimistic locking, atomic updates
+- `graceful-shutdown` — SIGTERM, drain, grace periods
+- Next: query performance (N+1, EXPLAIN, keyset pagination), caching
 
 ## ✅ seo (0.2)
 - `seo-architecture` — orchestrator: rendering, URLs, indexation, SEO.md

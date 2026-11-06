@@ -13,14 +13,16 @@ backend/skills/
 ├── service-structure/  thin handlers → services → domain → repositories/adapters; transactions; errors
 ├── migrations/         expand → migrate → contract; locks, backfills, indexes, rollback
 ├── background-jobs/    idempotent jobs, retries with backoff, leases, dead letter, one scheduler, event loops
-└── integrations/       outbound calls: timeouts, retries, circuit breakers, quotas, webhooks
+├── integrations/       outbound calls: timeouts, retries, circuit breakers, quotas, webhooks
+├── concurrency/        idempotency keys, unique constraints, optimistic locking, atomic updates, locks
+└── graceful-shutdown/  SIGTERM → drain → hand back work; grace periods; deploys that lose nothing
 ```
-Related: API shape → `architecture:api-design` · data model → `architecture:data-design` · secure coding → `security:secure-coding` · tests → `testing` · alerts → `devops:observability`.
+Outages and health checks → `devops:uptime`. Related: API shape → `architecture:api-design` · data model → `architecture:data-design` · secure coding → `security:secure-coding` · tests → `testing` · alerts → `devops:observability`.
 
 ## Steps
 1. **Read** `docs/architecture/ARCHITECTURE.md` (components, data, async work) and house defaults [references/defaults.md](references/defaults.md).
 2. **Stack guide** — [references/laravel.md](references/laravel.md) or [references/fastapi.md](references/fastapi.md).
-3. **Route by the change**: new endpoint/feature → `service-structure`; schema change → `migrations`; anything async, scheduled or retried → `background-jobs`; any call to another system → `integrations`.
+3. **Route by the change**: new endpoint/feature → `service-structure`; schema change → `migrations`; anything async, scheduled or retried → `background-jobs`; any call to another system → `integrations`; money/messages/bookings/counters or "exactly once" → `concurrency`; workers, deploy config or long requests → `graceful-shutdown`.
 4. **Check** — `bash "${CLAUDE_PLUGIN_ROOT}/scripts/backend-scan.sh" [dir]` (risky migrations, jobs without limits, HTTP without timeouts, unguarded schedulers); the hook flags the same while you write.
 5. **Prove** — the failure path has a test (retry, crash mid-job, provider down, duplicate delivery), not only the happy path.
 

@@ -1,5 +1,18 @@
 # Changelog
 
+## 1.8.0 — 2026-11-06
+- `devops` 0.2.0: new `uptime` skill and `uptime-scan.sh` (fail-correctly, health checks, monitoring references).
+  - Static rules: U1 (upstream 5xx served as 200 via `error_page … = @fallback` or `=200`), U2 (SPA fallback soft 404s), U3 (no health endpoint), U4 (no container healthcheck), U5 (compose without a restart policy), U6 (uvicorn/gunicorn without a graceful timeout).
+  - Live probes: U7 (unknown URL must be 404), U8 (health endpoint answers 200 in under 1 s).
+  - 25 tests with a local server; mutation 9/9.
+  - Live results: project 1's earlier 200-shell outage page is confirmed fixed (503 + Retry-After). Both sites still answer unknown URLs with 200/301 (soft 404).
+- `backend` 0.2.0: new skills `concurrency` and `graceful-shutdown`.
+  - New scanner rules: C1 check-then-insert (silent when an ON CONFLICT/IntegrityError guard exists), C2 read-modify-write on counters (silent when a row lock exists), G1 polling loop with no stop condition, G2 worker services without `stop_grace_period`. C1/G1 are info in one-off scripts.
+  - The C2 check on project 2's credits code was confirmed safe (user row locked).
+  - 76 tests.
+- Prevention benchmark: `tools/bench/README.md` documents prevention-build and prevention-review cases. 4 private cases are mined from history: a cron that never ran, a retry storm, an outage served as 200, and job-queue hardening.
+- Evals: `double-charge`, `deploy-kills-jobs` (backend), `outage-masked` (devops).
+
 ## 1.7.0 — 2026-11-06
 - New plugin `backend` 0.1.0. Skills: `backend` (orchestrator, with Laravel and FastAPI guides and house defaults), `service-structure`, `migrations` (zero-downtime table), `background-jobs` (job contract, Postgres queue, runners and event loops), `integrations` (outbound policy, webhooks).
 - `backend-scan.sh` (newest 30 migrations by default, `--all`, `--strict`) and a PostToolUse hook. Rules:

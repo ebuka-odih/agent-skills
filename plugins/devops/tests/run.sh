@@ -73,6 +73,77 @@ check "DELIVERY.md missing"             'grep -q "no docs/ops/DELIVERY.md" <<<"$
 E="$TMP/empty"; mkdir -p "$E"; out=$(bash "$SCAN" "$E")
 check "empty repo: no CI gap"           'grep -q "no CI configuration found" <<<"$out"'
 
+echo "uptime-scan"
+UP="$ROOT/scripts/uptime-scan.sh"
+us() { bash "$UP" "$@" 2>&1; }
+U="$TMP/up1"; mkdir -p "$U/web" "$U/app"
+cat > "$U/web/nginx.conf" <<'N'
+server {
+  location / { try_files $uri $uri/ /index.html; }
+  location /api { proxy_pass http://backend; proxy_intercept_errors on; error_page 500 502 503 504 = @spa; }
+  location @spa {
+    try_files /index.html =404;
+  }
+  location /old { error_page 502 =200 /ok.html; }
+  # error_page 502 =200 /commented.html;
+}
+N
+printf 'from fastapi import FastAPI\napp = FastAPI()\n' > "$U/app/main.py"
+printf 'FROM python:3.12-slim\nCMD ["uvicorn", "app.main:app"]\n' > "$U/Dockerfile"
+printf 'services:\n  web:\n    build: .\n' > "$U/compose.yaml"
+out=$(us "$U")
+check "U1: 5xx → @spa serving index.html"   'grep -q "error web/nginx.conf:3 U1: 5xx from the upstream is answered by @spa" <<<"$out"'
+check "U1: =200 on 5xx"                      'grep -q "error web/nginx.conf:7 U1: error_page turns server errors into 200" <<<"$out"'
+check "U1: comments ignored"                 '! grep -q "nginx.conf:8 " <<<"$out"'
+check "U2: SPA fallback soft 404"            'grep -q "warn web/nginx.conf:2 U2" <<<"$out"'
+check "U2: =404 fallback is fine"            '! grep -q "nginx.conf:5 U2" <<<"$out"'
+check "U3: FastAPI without health route"     'grep -q "warn app U3" <<<"$out"'
+check "U4: no HEALTHCHECK anywhere"          'grep -q "warn Dockerfile U4" <<<"$out"'
+check "U5: compose without restart"          'grep -q "warn compose.yaml U5" <<<"$out"'
+check "U6: uvicorn without graceful timeout" 'grep -q "info Dockerfile:2 U6" <<<"$out"'
+check "summary counts"                       'grep -q "Result: 2 error(s), 4 warning(s), 1 info." <<<"$out"'
+check "--strict fails on errors"             '! bash "$UP" "$U" --strict >/dev/null'
+G="$TMP/up2"; mkdir -p "$G/web" "$G/app"
+cat > "$G/web/nginx.conf" <<'N'
+server {
+  location / { try_files $uri $uri/ =404; }
+  location @app { proxy_pass http://backend; proxy_intercept_errors on; error_page 502 503 504 =503 @down; }
+  location @down { add_header Retry-After 120 always; try_files /app.html =503; }
+  location @err { error_page 500 = @maint; }
+  location @maint { return 503; }
+}
+N
+printf 'from fastapi import FastAPI\napp = FastAPI()\n@app.get("/livez")\ndef livez():\n    return {}\n' > "$G/app/main.py"
+printf 'FROM python:3.12-slim\nHEALTHCHECK CMD curl -fsS http://localhost:8000/livez || exit 1\nCMD ["uvicorn", "app.main:app", "--timeout-graceful-shutdown", "20"]\n' > "$G/Dockerfile"
+printf 'services:\n  web:\n    build: .\n    restart: unless-stopped\n' > "$G/compose.yaml"
+out=$(us "$G")
+check "correct stack is clean"               'grep -q "Result: 0 error(s), 0 warning(s), 0 info." <<<"$out"'
+check "--strict passes when clean"           'bash "$UP" "$G" --strict >/dev/null'
+L="$TMP/up3"; mkdir -p "$L/routes" "$L/bootstrap"
+printf '<?php\nuse Illuminate\\Foundation\\Application;\nreturn Application::configure()->withRouting(web: "routes/web.php", health: "/up");\n' > "$L/bootstrap/app.php"
+printf 'FROM php:8.3\n' > "$L/Dockerfile"; printf 'services:\n  app:\n    healthcheck:\n      test: ["CMD", "curl", "-f", "http://localhost/up"]\n    restart: always\n' > "$L/docker-compose.yml"
+out=$(us "$L")
+check "Laravel health: /up counts"           '! grep -q U3 <<<"$out"'
+check "compose healthcheck counts for U4"    '! grep -q U4 <<<"$out"'
+N0="$TMP/up4"; mkdir -p "$N0/src"; printf 'export const x = 1\n' > "$N0/src/a.ts"
+check "non-server code: no U3"               '! us "$N0" | grep -q U3'
+mkdir -p "$G/tests/web"; printf 'server { location / { try_files $uri /index.html; } }\n' > "$G/tests/web/nginx.conf"
+check "test fixtures ignored"                '! us "$G" | grep -q U2'
+check "missing dir: exit 2"                  'bash "$UP" "$TMP/none" >/dev/null; [ $? = 2 ]'
+upsrv() { local pf="$TMP/upport.$1"; python3 "$ROOT/tests/fixtures/uptime_server.py" "$pf" "$1" & SP=$!; for _ in $(seq 1 50); do [ -s "$pf" ] && break; sleep 0.1; done; SU="http://127.0.0.1:$(cat "$pf")"; }
+upsrv good; out=$(us "$G" --url "$SU"); kill $SP; wait $SP 2>/dev/null
+check "live: 404 for unknown URL is good"    'grep -q "live: unknown URL → 404 (good)" <<<"$out"'
+check "live: finds /livez"                   'grep -q "live: health endpoint /livez → 200" <<<"$out" && grep -q "Result: 0 error(s), 0 warning(s)" <<<"$out"'
+upsrv soft; out=$(us "$G" --url "$SU"); kill $SP; wait $SP 2>/dev/null
+check "live: soft 404 warned"                'grep -q "U7: unknown URL returns 200, not 404" <<<"$out"'
+upsrv nohealth; out=$(us "$G" --url "$SU/"); kill $SP; wait $SP 2>/dev/null
+check "live: no health endpoint warned"      'grep -q "U8: no public health endpoint answered 200" <<<"$out"'
+check "live: trailing slash on --url ok"     'grep -q "unknown URL → 404" <<<"$out"'
+upsrv slow; out=$(us "$G" --url "$SU"); kill $SP; wait $SP 2>/dev/null
+check "live: slow health endpoint warned"    'grep -q "U8: health endpoint took 1\.[0-9]*s" <<<"$out"'
+out=$(us "$G" --url "http://127.0.0.1:9")
+check "live: no answer is an error"          'grep -q "error http://127.0.0.1:9 U7: site did not answer" <<<"$out"'
+
 echo
 echo "$pass passed, $fail failed"
 [ "$fail" -eq 0 ]

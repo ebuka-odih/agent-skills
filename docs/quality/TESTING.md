@@ -22,15 +22,15 @@ Dogfooding found two planner gaps, fixed before running the rest: guard/gate/hoo
 | ai-engineering | 10 |
 | code-standards | 37 |
 | collaboration | 33 |
-| devops | 53 |
+| devops | 78 |
 | product | 80 |
 | security | 34 |
 | testing | 24 |
 | frontend | 67 |
 | seo | 150 |
-| backend | 62 |
+| backend | 76 |
 | bench harness | 65 |
-| **Total** | **653** |
+| **Total** | **692** |
 
 ## 3. Mutation testing — do the tests catch broken guards?
 No mutation tool supports bash, so `tools/mutate-bash.sh` applies one mutation at a time (neutralise a deny/ask decision, flip a comparison, delete a rule or pattern, negate a condition, disable a redaction rule), runs that plugin's tests, and counts killed vs surviving mutants.
@@ -53,6 +53,7 @@ No mutation tool supports bash, so `tools/mutate-bash.sh` applies one mutation a
 | `product/loop.sh` | 2/6 (33%) | 6/6 (100%) — tests added for nested manifests and the ready-task branch |
 | `seo/seo-scan.sh` (new operator) | — | 45/45 (100%) |
 | `backend/backend-patterns.sh` | 0/0 (rules not reachable by the runner) | 20/20 (100%) — new awk-rule operator |
+| `devops/uptime-scan.sh` | 9/9 (100%) | 9/9 (100%) |
 
 \* Both git-guard survivors were a bug in the mutation runner itself (awk `-v` stripped backslashes, changing `\s` to `s`), not test gaps. Fixed by passing the mutant through `ENVIRON`, plus a check that exactly one line differs.
 

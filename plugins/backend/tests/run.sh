@@ -163,12 +163,94 @@ echo "repo checks (scheduler vs deploy)"
 R="$TMP/repo"; mkdir -p "$R/app"; echo 'cron_jobs = [cron(send)]' > "$R/app/arq_worker.py"; echo 'CMD ["uvicorn", "app.main:app"]' > "$R/Dockerfile"
 o=$(be_scan_repo "$R")
 check "arq cron without deployed worker"    'has "$o" "error app/arq_worker.py:1 S2"'
-printf 'services:\n  worker:\n    command: arq app.arq_worker.WorkerSettings\n' > "$R/compose.yaml"
+printf 'services:\n  worker:\n    command: arq app.arq_worker.WorkerSettings\n    stop_grace_period: 60s\n' > "$R/compose.yaml"
 check "deployed arq worker → ok"            '[ -z "$(be_scan_repo "$R")" ]'
 R2="$TMP/repo2"; mkdir -p "$R2"; echo 'beat_schedule = {}' > "$R2/celery_app.py"
 check "celery beat without deploy"          'has "$(be_scan_repo "$R2")" "S3"'
 printf 'web: gunicorn app\nbeat: celery -A app beat\n' > "$R2/Procfile"
 check "deployed beat → ok"                  '[ -z "$(be_scan_repo "$R2")" ]'
+
+echo "concurrency (C1, C2)"
+o=$(s app/book.py 'async def book(db, slot):
+    taken = await db.scalar(select(B).where(B.slot == slot))
+    if taken:
+        raise Conflict()
+    db.add(B(slot=slot))
+def spend(user, n):
+    user.credits -= n
+def fine(user, n):
+    user.name = "x"')
+check "C1: check then add"                   'has "$o" "warn app/book.py:3 C1"'
+check "C2: counter -= in python"             'has "$o" "warn app/book.py:7 C2"'
+o=$(s app/book2.py 'async def book(db, slot):
+    existing = await db.scalar(q)
+    if existing:
+        return existing
+    db.execute(text("INSERT INTO b VALUES (:s) ON CONFLICT DO NOTHING"))')
+check "C1: ON CONFLICT in file → fine"       '! has "$o" "C1"'
+o=$(s app/book3.py 'def book(db, slot):
+    if exists(slot):
+        raise X
+    for i in range(20): pass
+    for i in range(20): pass
+    for i in range(20): pass
+    for i in range(20): pass
+    for i in range(20): pass
+    db.add(B())')
+check "C1: insert far from check ignored"    '! has "$o" "C1"'
+o=$(s app/charge.py 'def charge(db, uid, n):
+    user = _lock_user(db, uid)
+    user.credits -= n')
+check "C2: row lock in file → fine"          '! has "$o" "C2"'
+o=$(s app/Http/Wallet.php '<?php
+class Wallet { function pay($u, $n) {
+  if (Payment::where("ref", $r)->exists()) { return; }
+  Payment::create(["ref" => $r]);
+  $u->balance -= $n; $u->save();
+} }')
+check "C1/C2 in PHP"                          'has "$o" "warn app/Http/Wallet.php:3 C1" && has "$o" "warn app/Http/Wallet.php:5 C2"'
+o=$(s app/Http/Wallet2.php '<?php
+class W { function pay($u) {
+  if (P::where("r", 1)->exists()) { return; }
+  P::firstOrCreate(["r" => 1]);
+  DB::transaction(fn () => U::lockForUpdate()->find(1)); $u->balance -= 1;
+} }')
+check "PHP guards suppress C1/C2"             '! has "$o" "C1" && ! has "$o" "C2"'
+
+o=$(s app/tools/seed_market.py 'def seed(db):
+    if exists(x):
+        return
+    db.add(X())
+import time
+while True:
+    time.sleep(1)')
+check "one-off scripts: C1/G1 as info"        'has "$o" "info app/tools/seed_market.py:2 C1" && has "$o" "info app/tools/seed_market.py:6 G1"'
+echo "graceful shutdown (G1, G2)"
+o=$(s app/poller.py 'import time
+def run():
+    while True:
+        work()
+        time.sleep(5)')
+check "G1: polling loop without stop"         'has "$o" "warn app/poller.py:3 G1"'
+o=$(s app/pager.py 'def all_pages(c):
+    while True:
+        page = c.next()
+        if not page:
+            break')
+check "G1: loop without sleep (pagination)"   '! has "$o" "G1"'
+o=$(s app/poller2.py 'import asyncio
+stop = asyncio.Event()
+async def run():
+    while True:
+        if stop.is_set(): return
+        await asyncio.sleep(5)')
+check "G1: stop flag → fine"                  '! has "$o" "G1"'
+R3="$TMP/repo3"; mkdir -p "$R3"; printf 'services:\n  web:\n    command: uvicorn app.main:app\n  worker:\n    command: php artisan queue:work --tries=3\n  beat:\n    command: celery -A app worker\n    stop_grace_period: 90s\n' > "$R3/compose.yaml"
+o=$(be_scan_repo "$R3")
+check "G2: worker without grace period"       'has "$o" "warn compose.yaml:4 G2: worker service \"worker\""'
+check "G2: web service and graced worker ok"  '! has "$o" ":2 G2" && ! has "$o" ":6 G2"'
+printf 'services:\n  w:\n    command: rq worker default\n' > "$R3/compose.yaml"
+check "G2: last service checked at end"       'has "$(be_scan_repo "$R3")" "compose.yaml:2 G2"'
 
 echo "scan command"
 P="$TMP/proj"; mkdir -p "$P/alembic/versions" "$P/app"
