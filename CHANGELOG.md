@@ -1,5 +1,17 @@
 # Changelog
 
+## 1.7.0 — 2026-11-06
+- New plugin `backend` 0.1.0. Skills: `backend` (orchestrator, with Laravel and FastAPI guides and house defaults), `service-structure`, `migrations` (zero-downtime table), `background-jobs` (job contract, Postgres queue, runners and event loops), `integrations` (outbound policy, webhooks).
+- `backend-scan.sh` (newest 30 migrations by default, `--all`, `--strict`) and a PostToolUse hook. Rules:
+  - M1–M6 migrations: drop, rename, type change, NOT NULL without default, index on an existing table, SET NOT NULL. They skip `downgrade()`/`down()` and tables created in the same migration, and read SQL and table names across lines.
+  - J1–J6 jobs: Laravel jobs without tries/timeout/backoff/failed; Celery autoretry without backoff; `time.sleep` in async code; a thread running its own event loop.
+  - O1: `requests` without a timeout, including multi-line calls.
+  - S1–S3 schedulers: no overlap guard; arq cron or Celery beat with no deployed worker.
+- 62 tests; mutation 20/20 on the rules. The mutation runner now also removes `if (…) print "…"` awk rules, which added 13 mutants to the seo scripts, all killed.
+- Real scans (read-only): project 2 has a live thread + `asyncio.run` + shared async engine in its outreach scheduler, the same pattern that hung its directory sync. Project 1 has 8 historical non-concurrent indexes on existing tables. Both handed back.
+- Loop: `backend` is a core plugin (`loop.sh plugins`); the build phase names it; `system-design` hands off to it. product 0.2.1, architecture 0.2.4.
+- Evals: rename-column-live, retry-storm, thin-handler, provider-hangs. Bench cases from real fixes (project 2 retry storm, project 1 job-queue hardening) are written and verified to discriminate; their runs hit the usage limit and are queued for after the reset.
+
 ## 1.6.1 — 2026-11-06
 - Bench harness: hidden tests are copied in, run, then removed again, and an agent file at the same path is restored. Before this, the hidden test file leaked into later checks (the agent's `npm test` ran it). The greenfield example's hidden test now runs as `.mjs`, so a CommonJS or ESM app both load. 65 harness tests.
 - First real benchmark results, 4 tasks (3 from project 1, 1 greenfield): quality 4/4 with and without plugins; plugins +35% cost and +29% time in total. Details and next steps are in the README. The harness bugs found along the way are fixed.

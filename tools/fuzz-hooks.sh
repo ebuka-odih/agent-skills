@@ -12,6 +12,7 @@ HOOKS=(
   "collaboration/scripts/git-guard.sh" "code-standards/scripts/leftover-hook.sh" "security/scripts/secret-guard.sh"
   "devops/scripts/infra-guard.sh" "product/scripts/plan-context.sh" "ai-engineering/scripts/ai-context.sh"
   "frontend/scripts/ui-hook.sh"
+  "backend/scripts/backend-hook.sh"
 )
 PROJ="$(mktemp -d)"; trap 'rm -rf "$PROJ"' EXIT
 export CLAUDE_PROJECT_DIR="$PROJ"

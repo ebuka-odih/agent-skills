@@ -1,0 +1,8 @@
+{
+  "description": "backend: after each Edit/Write to a migration, job, scheduler or Python/PHP file, flag unsafe schema changes, unbounded jobs, HTTP calls without timeouts and event-loop misuse (non-blocking).",
+  "hooks": {
+    "PostToolUse": [
+      { "matcher": "Edit|Write|MultiEdit", "hooks": [ { "type": "command", "command": "bash", "args": ["${CLAUDE_PLUGIN_ROOT}/scripts/backend-hook.sh"], "timeout": 10 } ] }
+    ]
+  }
+}

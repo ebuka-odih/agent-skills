@@ -74,6 +74,8 @@ Recommend one option per area. Name a runner-up only when the trade-off is close
 - The doc describes what **is**. Hopes go under "Planned evolution" with a measurable trigger.
 - Never edit an accepted ADR. Supersede it.
 
+Building it: server code, migrations and background jobs → `backend:backend` (how to build what this doc designs).
+
 ## Hand-off (project loop)
 Skills share work through files, not memory. When this skill's output is written, log it and let the loop pick the next step:
 `bash <product plugin>/scripts/loop.sh log foundation/design "ARCHITECTURE.md"` then `loop.sh next` (skill `product:project-loop`). If an input file this skill needs is missing, name it and the skill that writes it instead of guessing.

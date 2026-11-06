@@ -1,0 +1,8 @@
+{
+  "name": "backend",
+  "version": "0.1.0",
+  "description": "Build server code that survives production: thin handlers over services, zero-downtime migrations, background jobs that retry safely (idempotent, backoff, leases, dead letter, one scheduler), and outbound calls with timeouts and circuit breakers — for Laravel and FastAPI, with a scanner and a migration/job hook.",
+  "author": { "name": "ebuka-odih" },
+  "license": "MIT",
+  "keywords": ["backend", "laravel", "fastapi", "migrations", "queues", "jobs", "workers", "sqlalchemy", "alembic", "reliability"]
+}

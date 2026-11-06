@@ -5,14 +5,14 @@
   },
   "metadata": {
     "description": "Personal engineering standards as Claude Code skills, grouped by domain. Install once, follow in every project.",
-    "version": "1.6.1"
+    "version": "1.7.0"
   },
   "plugins": [
     {
       "name": "product",
       "source": "./plugins/product",
       "description": "Run a project end to end as one loop: spec with profile and risks, prototypes, plan, one task at a time, release, evolve; adopt existing codebases; loop.sh routes to only the domains a project needs.",
-      "version": "0.2.0",
+      "version": "0.2.1",
       "category": "development"
     },
     {
@@ -26,7 +26,7 @@
       "name": "architecture",
       "source": "./plugins/architecture",
       "description": "System design: repo and service shape, auth, data, APIs, ADRs. Writes docs/architecture/ARCHITECTURE.md, the contract every other plugin reads.",
-      "version": "0.2.3",
+      "version": "0.2.4",
       "category": "development"
     },
     {
@@ -83,6 +83,13 @@
       "source": "./plugins/seo",
       "description": "Technical SEO: rendering/URLs/indexation (SEO.md), keyword research, Search Console + drop diagnosis, Core Web Vitals, live crawl audits, head tags, structured data, programmatic pages, hreflang; scripts for each.",
       "version": "0.2.1",
+      "category": "development"
+    },
+    {
+      "name": "backend",
+      "source": "./plugins/backend",
+      "description": "Build server code that survives production: thin handlers over services, zero-downtime migrations, background jobs that retry safely, outbound calls with timeouts and circuit breakers; Laravel + FastAPI; scanner and migration/job hook.",
+      "version": "0.1.0",
       "category": "development"
     }
   ]

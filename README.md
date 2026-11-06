@@ -17,6 +17,7 @@ claude plugin install testing@ebuka-skills
 claude plugin install devops@ebuka-skills
 claude plugin install frontend@ebuka-skills
 claude plugin install seo@ebuka-skills
+claude plugin install backend@ebuka-skills
 ```
 
 Working on the skills from a local clone? Run `claude plugin marketplace add ./` from the repo root instead.
@@ -73,6 +74,7 @@ flowchart LR
 | `testing` | ✅ 0.1 | `test-strategy` (orchestrator) · `mutation-testing` · `property-based` · `contract-testing` · `e2e-testing` · `non-functional` (load, a11y, visual) |
 | `security` | ✅ 0.1 | `security-baseline` (orchestrator) · `secure-coding` · `threat-model` · `secrets-and-deps` · `security-audit` (→ [Cloudflare's skill](UPSTREAM.md)) + secret guard hook |
 | `frontend` | ✅ 0.2 | `ui-system` (orchestrator) · `shadcn-tailwind` · `dashboard-patterns` · `ui-consistency` · `component-testing` · `browser-checks` · `frontend-performance` + token hook + `ui-check` runner |
+| `backend` | ✅ 0.1 | `backend` (orchestrator) · `service-structure` · `migrations` · `background-jobs` · `integrations` + `backend-scan.sh` + migration/job hook |
 | `seo` | ✅ 0.2 | `seo-architecture` (orchestrator) · `keyword-research` · `search-console` · `page-speed` · `site-audit` · `on-page` · `structured-data` · `programmatic-seo` · `international` + built-site scanner, live crawler, Search Console and PageSpeed reports |
 | `devops` | ✅ 0.1 | `delivery-pipeline` (orchestrator) · `ci` · `environments` · `infrastructure-as-code` · `observability` · `release-and-rollback` + infra guard hook |
 | `collaboration` | ✅ 0.1 | `git-workflow` (orchestrator) · `commits` · `pull-requests` · `code-review` · `repo-setup` + git guard hook |
@@ -139,6 +141,23 @@ Consistency comes from **few decisions reused everywhere**, not careful screens:
 - **`frontend-performance`** sets Web Vitals and bundle budgets, fixes waterfalls, lazy-loads heavy libraries, and virtualises big tables.
 - **`ui-scan.sh`** reports theme setup, component layers, drift counts per type with the top files, and missing tooling. On two real dashboards it found 400–1,400 raw colours and arbitrary values each, and no app-component layer.
 - **The token hook** (non-blocking) flags `bg-blue-600`, hex/rgb literals, `p-[13px]` and `style={{…}}` as they're written, and names the token to use. shadcn primitives, stories, tests, `data-[…]` variants and `var()` values are exempt.
+
+## What `backend` does — server code that survives production
+
+`architecture` designs the components; `backend` says how to build them so they hold up under retries, crashes, deploys and failing providers. It covers Laravel and FastAPI (async SQLAlchemy, Alembic, arq/Celery/Postgres queues).
+
+- **`service-structure`** keeps handlers thin over one service per use case. Each service owns its transaction, domain errors are mapped once, the clock is injectable, and invariants are enforced in the database.
+- **`migrations`** changes schemas with zero downtime: expand → migrate → contract, lock timeouts, concurrent indexes, NOT VALID constraints, batched backfills.
+- **`background-jobs`** sets the job contract: idempotent, with timeout, attempt limit and backoff + jitter, dead letter, and enqueue after commit. It covers Postgres queues (SKIP LOCKED, one job per claim, leases, recovery, dedupe index), one scheduler in a process that is actually deployed, and event loops that aren't shared across threads.
+- **`integrations`** gives one client per provider, with timeouts, idempotent-only retries, a circuit breaker, a pause on 402/quota errors, and verified, deduped webhooks.
+- **`backend-scan.sh`** and a non-blocking hook flag:
+  - unsafe migrations, aware of new tables vs existing ones and of `downgrade()`
+  - jobs without limits
+  - `requests` calls without a timeout
+  - schedulers without an overlap guard, or not deployed
+  - threads running their own event loop
+
+The patterns come from real fixes in two projects. The first scan found the same thread/event-loop hang pattern still live in a second worker.
 
 ## What `seo` does — ranking built into the architecture
 
@@ -264,7 +283,7 @@ Three layers. The first two must pass before bumping a version; the third measur
 
 | Layer | What it proves | Run |
 |---|---|---|
-| Script tests (591 checks) | Hooks log correctly, redact secrets, gate blocks/releases; plan parsing, ready logic, traceability | `bash plugins/agent-ops/tests/run.sh` · `bash plugins/product/tests/run.sh` · `bash plugins/ai-engineering/tests/run.sh` · `bash plugins/collaboration/tests/run.sh` · `bash plugins/code-standards/tests/run.sh` · `bash plugins/security/tests/run.sh` · `bash plugins/testing/tests/run.sh` · `bash plugins/seo/tests/run.sh` |
+| Script tests (653 checks) | Hooks log correctly, redact secrets, gate blocks/releases; plan parsing, ready logic, traceability | `bash plugins/agent-ops/tests/run.sh` · `bash plugins/product/tests/run.sh` · `bash plugins/ai-engineering/tests/run.sh` · `bash plugins/collaboration/tests/run.sh` · `bash plugins/code-standards/tests/run.sh` · `bash plugins/security/tests/run.sh` · `bash plugins/testing/tests/run.sh` · `bash plugins/seo/tests/run.sh` |
 | Skill evals | A real agent with the plugin does what SKILL.md promises, compared with the same agent without it | `cd plugins/<domain> && claude plugin eval . --allow-tools Write Edit Bash --no-publish` |
 | Project benchmark | On tasks you already shipped, replayed from the commit before the fix, the agent *with* the plugins beats the same agent *without* them. Scored by the hidden tests from your real fix, plus an LLM judge that sees your shipped diff | `tools/bench/bench.sh run` — see [tools/bench/README.md](tools/bench/README.md). Cases and results are private (gitignored) |
 

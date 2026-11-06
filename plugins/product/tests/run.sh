@@ -196,7 +196,7 @@ mk "$P" "# Spec
 pl=$(bash "$L" plugins "$P")
 check "plugins: valid settings JSON"        'jq -e ".enabledPlugins" <<<"$pl" >/dev/null'
 check "plugins: off domains disabled"       '[ "$(jq ".enabledPlugins[\"frontend@ebuka-skills\"]" <<<"$pl")" = false ] && [ "$(jq ".enabledPlugins[\"ai-engineering@ebuka-skills\"]" <<<"$pl")" = true ] && [ "$(jq ".enabledPlugins[\"seo@ebuka-skills\"]" <<<"$pl")" = true ]'
-check "plugins: core always on"             '[ "$(jq "[.enabledPlugins | to_entries[] | select(.value)] | length" <<<"$pl")" = 10 ]'
+check "plugins: core always on"             '[ "$(jq "[.enabledPlugins | to_entries[] | select(.value)] | length" <<<"$pl")" = 11 ] && [ "$(jq ".enabledPlugins[\"backend@ebuka-skills\"]" <<<"$pl")" = true ]'
 check "json carries domains"                'bash "$L" json "$P" | jq -e ".domains | index(\"ui=off(profile)\")" >/dev/null'
 # existing code
 E="$LT/e"; mk "$E"; mkdir -p "$E/app" "$E/tests"

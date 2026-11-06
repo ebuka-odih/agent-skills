@@ -49,6 +49,7 @@ plugins/seo/scripts/gsc-report.sh|bash plugins/seo/tests/run.sh
 plugins/seo/scripts/page-speed.sh|bash plugins/seo/tests/run.sh
 tools/bench/bench.sh|bash tools/bench/tests/run.sh
 plugins/product/scripts/loop.sh|bash plugins/product/tests/run.sh
+plugins/backend/scripts/backend-patterns.sh|bash plugins/backend/tests/run.sh
 EOF
 fi
 

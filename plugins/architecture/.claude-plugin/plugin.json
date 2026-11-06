@@ -1,6 +1,6 @@
 {
   "name": "architecture",
-  "version": "0.2.3",
+  "version": "0.2.4",
   "description": "System design skills: system-design (orchestrator), repo-and-services, auth-design, data-design, api-design, adr. Produces docs/architecture/ARCHITECTURE.md and ADRs.",
   "author": {
     "name": "ebuka-odih"

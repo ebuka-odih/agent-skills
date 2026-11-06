@@ -72,6 +72,7 @@ for n in $(seq 1 "$lines"); do
   # awk detection rules (`if (…) print path …`) and exported pattern regexes
   case "$l" in
     *'if ('*') print path'*) mutate_line "$n" 's/.*/      # rule removed/' rule ;;
+    *'if ('*') print "'*|*'{ print "'*) mutate_line "$n" 's/.*/      # rule removed/' rule ;;
   esac
   case "$l" in
     export\ *_RE=*) mutate_line "$n" 's/=.*/="NEVER_MATCHES_XYZ"/' rule ;;

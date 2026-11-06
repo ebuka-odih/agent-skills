@@ -135,7 +135,7 @@ case "$cmd" in
   plugins) # project-level settings: switch off plugins this project doesn't need (their skill descriptions stop costing tokens)
     on() { [ "$1" = 1 ] && echo true || echo false; }
     printf '{\n  "enabledPlugins": {\n'
-    for p in product agent-ops architecture code-standards testing security collaboration devops; do printf '    "%s@ebuka-skills": true,\n' "$p"; done
+    for p in product agent-ops architecture backend code-standards testing security collaboration devops; do printf '    "%s@ebuka-skills": true,\n' "$p"; done
     printf '    "frontend@ebuka-skills": %s,\n    "ai-engineering@ebuka-skills": %s,\n    "seo@ebuka-skills": %s\n  }\n}\n' "$(on $NEED_UI)" "$(on $NEED_AI)" "$(on $NEED_SEO)"
     exit 0 ;;
   next) echo "$next — $why" ;;

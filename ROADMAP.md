@@ -2,6 +2,14 @@
 
 Each domain is one plugin. Each line under it is one skill. Orchestrator first.
 
+## ✅ backend (0.1)
+- `backend` — orchestrator: stack guides (Laravel, FastAPI), house defaults
+- `service-structure` — layers, transactions, errors
+- `migrations` — zero-downtime patterns
+- `background-jobs` — job contract, Postgres queues, runners, schedulers, event loops
+- `integrations` — outbound policy, circuit breaker, webhooks
+- Next: uptime & outage behaviour (503 + Retry-After, health/readiness, alerts)
+
 ## ✅ seo (0.2)
 - `seo-architecture` — orchestrator: rendering, URLs, indexation, SEO.md
 - `on-page` — head tags per page + stack snippets

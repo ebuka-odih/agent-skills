@@ -30,7 +30,7 @@ existing code ─▶ ADOPT: recover SPEC + ARCHITECTURE, BASELINE from scanners 
 4. Repeat. Stop and ask the user only at the decision points marked 🧑 in phases.md.
 
 ## Only what the project needs
-Routing reads `## Profile` in SPEC.md (`ui / ai / seo: yes|no`, set with the user in product-spec). With no profile, `loop.sh` detects from the code (frontend deps, LLM SDKs or API hosts, sitemap/robots files) and the spec's words, and says so: `Domains: ui=on(profile) ai=off(profile) seo=on(detected)`. A profile "no" that the code contradicts is reported as a **mismatch**. Skills of off domains are never called; `loop.sh plugins > .claude/settings.json` (merge with existing settings) disables their plugins for this repo so even their descriptions stay out of context. Core plugins (product, agent-ops, architecture, code-standards, testing, security, collaboration, devops) stay on.
+Routing reads `## Profile` in SPEC.md (`ui / ai / seo: yes|no`, set with the user in product-spec). With no profile, `loop.sh` detects from the code (frontend deps, LLM SDKs or API hosts, sitemap/robots files) and the spec's words, and says so: `Domains: ui=on(profile) ai=off(profile) seo=on(detected)`. A profile "no" that the code contradicts is reported as a **mismatch**. Skills of off domains are never called; `loop.sh plugins > .claude/settings.json` (merge with existing settings) disables their plugins for this repo so even their descriptions stay out of context. Core plugins (product, agent-ops, architecture, backend, code-standards, testing, security, collaboration, devops) stay on.
 
 ## Modes
 | Situation | Read |
