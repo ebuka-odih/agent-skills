@@ -8,7 +8,7 @@ description: Turn the user's request into a written goal with checkable acceptan
 Write down what "done" means **before** doing the work, in terms a command or a reader can check.
 
 ## Size first
-**small** = a fix or tweak whose expected behaviour the request already states, touching ≤ ~3 source files, with no schema/migration, public API contract, auth/permission, money/message, dependency or deploy change. A **small** request takes the fast path: no GOAL.md — one test that pins the behaviour, the smallest change, the module's tests run, and a final message with the change and the evidence. If it grows past that (a fourth file, a schema change, a surprise), stop and write the goal.
+**small** = a fix or tweak whose expected behaviour the request already states, touching ≤ ~3 source files, with no schema/migration, public API contract, auth/permission, money/message, dependency or deploy change. A **small** request takes the fast path: no GOAL.md — one test that pins the behaviour, the smallest change, the module's tests run, and a final message with the change and the evidence. If it grows past that (a fourth file, a schema change, a surprise), stop and write the goal. Small does not mean skip the domain rules: if the file is a background job, worker, scheduler, migration or provider client, load that domain skill (e.g. `backend:background-jobs`, `backend:migrations`, `backend:integrations`) and follow its hard rules.
 
 ## Steps
 1. If `.agent-log/GOAL.md` exists with `status: active` and a different goal: move it to `.agent-log/goals/<YYYY-MM-DD>-<slug>.md` with `status: abandoned` or `superseded`, and tell the user.

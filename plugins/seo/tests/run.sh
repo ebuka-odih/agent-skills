@@ -210,6 +210,9 @@ check "good CTR not flagged"              '! sed -n "/Low CTR/,/Top pages/p" <<<
 check "low CTR shows benchmark"           'has "$out" "(benchmark ~15%)"'
 check "pages with impressions, 0 clicks"  'sed -n "/0 clicks/,\$p" <<<"$out" | grep -q "https://x.test/a"'
 check "small zero-click page ignored"     '! sed -n "/0 clicks —/,\$p" <<<"$out" | grep -q "x.test/b"'
+FB="$TMP/fakebin"; mkdir -p "$FB"; printf '#!/usr/bin/env bash\n[ "$1" = -d ] && [ $# -eq 1 ] && exit 1\nexec /usr/bin/mktemp "$@"\n' > "$FB/mktemp"; chmod +x "$FB/mktemp"
+out=$(cd "$G" && PATH="$FB:$PATH" bash "$GSC" "$G")
+check "temp dir falls back when mktemp -d fails" 'has "$out" "drop starts d031" && ! ls -d "$G"/.seo-tmp.* >/dev/null 2>&1'
 out=$(bash "$GSC" "$G" --min-impressions 1000)
 check "--min-impressions raises the bar"  'has "$out" "pharmacy" && ! sed -n "/Low CTR/,/Top pages/p" <<<"$out" | grep -q "hospitals"'
 (cd "$G" && zip -q "$TMP/gsc.zip" Dates.csv Queries.csv Pages.csv)

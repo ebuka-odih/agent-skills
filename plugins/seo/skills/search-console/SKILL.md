@@ -10,7 +10,7 @@ description: Read Google Search Console data to track rankings and find wins —
 
 ## Steps
 1. **Run** `bash "${CLAUDE_PLUGIN_ROOT}/scripts/gsc-report.sh" <export.zip|dir> [--min-impressions 50]` — prints trend (last 7 days vs previous 28), drop start date, striking-distance queries, low-CTR rows, top pages.
-2. **Sudden drop?** Follow [references/diagnose-drops.md](references/diagnose-drops.md) *before* touching content: shape of the drop → likely cause → where to confirm.
+2. **Sudden drop?** Follow [references/diagnose-drops.md](references/diagnose-drops.md) *before* touching content: shape of the drop → likely cause → where to confirm. Then find **what changed in the 1–2 days before the drop date** — the repo's deploy/change log (DEPLOYS.md, CHANGELOG, `git log --since`), hosting/CDN/DNS changes — and name it as the prime suspect.
 3. **Opportunities** — [references/opportunities.md](references/opportunities.md): striking distance → strengthen the page; low CTR → rewrite title/description (`on-page`); impressions with no matching page → `keyword-research`.
 4. **Check the indexing side** — Pages (indexing) report reasons, Sitemaps status, Crawl stats host status. Live check with `site-audit`.
 5. **Record** — date, change made, expected effect in SEO.md § Changes log; annotate the Search Console chart. Re-check after 2–4 weeks (positions move slowly).

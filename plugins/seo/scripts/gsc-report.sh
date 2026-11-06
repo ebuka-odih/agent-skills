@@ -10,7 +10,7 @@ min=50; top=15
 while [ $# -gt 0 ]; do case "$1" in --min-impressions) min="$2"; shift ;; --top) top="$2"; shift ;; esac; shift; done
 [ -n "$src" ] && [ -e "$src" ] || { echo "usage: gsc-report.sh <export.zip|dir> [--min-impressions N] [--top N]"; exit 2; }
 
-TMP="$(mktemp -d)"; trap 'rm -rf "$TMP"' EXIT
+TMP="$(mktemp -d 2>/dev/null || mktemp -d "${PWD}/.seo-tmp.XXXXXX")"; trap 'rm -rf "$TMP"' EXIT
 if [ -f "$src" ]; then
   command -v unzip >/dev/null || { echo "need unzip for .zip exports"; exit 2; }
   unzip -qo "$src" -d "$TMP/x" || { echo "not a zip: $src"; exit 2; }; dir="$TMP/x"

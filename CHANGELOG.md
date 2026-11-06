@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.10.0 — 2026-11-06
+Fixes from the first overnight benchmark, prevention and eval run (results in the README).
+- Fast path still loads the domain skill when the file is a job, worker, scheduler, migration or provider client. On the fast path, a retry-loop fix skipped `background-jobs` and missed "every failure sets the retry time" (0.42 vs 1.0). agent-ops 0.1.5, code-standards 0.1.7.
+- `background-jobs`: classify provider errors before retrying. 402, quota or out of credits pauses all work for that provider. Both arms of the retry-review prevention case missed this. backend 0.2.1.
+- `search-console`: after a sudden drop, name what changed 1–2 days before it (deploy log, CHANGELOG, `git log`, CDN or DNS).
+- seo scripts fall back to a temp dir in the working directory when `mktemp -d` fails (sandboxes); `gsc-report.sh` failed inside the eval sandbox. Test included.
+- Eval `local-business-jsonld`: the prompt now asks for the markup in the view. The grader reads only the view, and the with-plugins run had (validly) moved the builder into the model. seo 0.2.2.
+
 ## 1.9.0 — 2026-11-06
 - **Fast path for small changes.** "Small" means a fix or tweak whose expected behaviour the request already states, touching at most ~3 source files, with no schema, public API, auth, money/messages, dependency or deploy change. A small change gets one test, the smallest change in the existing pattern, the module's tests, and a final note with evidence. It needs no GOAL.md, no strategy, and no new docs or helpers. Added because the first benchmarks showed +35% cost with no quality gain on small fixes. The plugins wrote extra helper modules, test files and an unrequested docs update.
   - `goal-nudge` hook sizes the request first: agent-ops 0.1.4.

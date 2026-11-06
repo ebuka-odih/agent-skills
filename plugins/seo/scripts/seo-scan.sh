@@ -40,7 +40,7 @@ parse() {
   '
 }
 
-TMP="$(mktemp -d)"; trap 'rm -rf "$TMP"' EXIT
+TMP="$(mktemp -d 2>/dev/null || mktemp -d "${PWD}/.seo-tmp.XXXXXX")"; trap 'rm -rf "$TMP"' EXIT
 pages="$TMP/pages.tsv"; alts="$TMP/alts.tsv"; : > "$pages"; : > "$alts"
 n=0
 

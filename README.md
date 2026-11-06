@@ -279,6 +279,24 @@ Four tasks, replayed from the commit before the shipped change. Scoring uses the
 - **The benchmark caught three bugs in its own harness**, all fixed: the judge silently blocked by a Stop hook, hidden tests leaking into later checks, and an ES-module-only hidden test. Without those fixes, the greenfield result would have read 0.46 vs 0.76.
 - **Next:** harder cases where the skills should matter (vague requests, multi-step features, project conventions, security), and a fast path that skips the goal ceremony for small, clear fixes.
 
+### Overnight run — prevention, backend and the fast path (2026-11-06, 1 run each)
+
+| Run | Score with / without | Cost with / without | What it shows |
+|---|---|---|---|
+| Prevention · outage page served as 200 (project 1) | **1.0 / 0.14** | $1.64 / $1.56 | Without plugins the agent rewrote the exact nginx line behind the real outage; `devops:uptime` returned 503 + Retry-After |
+| Prevention · job-queue review (project 1) | 1.0 / 1.0 | $1.00 / $0.88 | Both found the real issues |
+| Prevention · scheduled sends (project 2) | 0.62 / 0.62 | $1.93 / $1.42 | Same design, same failed hidden test |
+| Prevention · retry review (project 2) | 0.14 / 0.14 | $1.10 / $1.01 | Neither flagged 402 as "pause, don't retry" → rule added |
+| Backend · job hardening (project 1) | 1.0 / 1.0 | $3.23 / $2.43 | Tie |
+| Backend · retry tight loop (project 2) | 0.42 / 1.0 | $1.04 / $0.89 | Fast path skipped the jobs skill → fixed |
+| Fast path · search links lose `?q=` | 1.0 / 1.0 | **$0.50** / $0.47 (was $0.76) | 95 s vs 198 s |
+| Fast path · `\u2014` escapes | **1.0 / 0.42** | **$0.66** / $0.67 (was $1.23) | 188 s vs 223 s |
+| Evals · seo (7 cases × 2 arms) | mean Δ **+0.21** | $3.19 total | Wins: SEO plan, speed priorities, keyword map. Losses traced to a sandbox temp-dir bug and a grader that read one file → both fixed |
+
+- **The fast path closed the cost gap.** Small fixes now cost the same with plugins and finish faster.
+- **Prevention is where the plugins earn their keep:** one real past outage was prevented; one rule gap found and closed.
+- The other 11 evals (backend, devops, frontend, product, code-standards) hit the usage limit and were not graded. They are queued for the next run.
+
 ## Feedback from real projects
 
 Agents working on real projects report what the skills missed. Each report becomes a general change in this repo, never per-project tooling: it's logged in [FEEDBACK.md](FEEDBACK.md), built with tests, versioned, then handed back to the project. The repo-local `improve-from-feedback` skill runs that loop.
@@ -289,7 +307,7 @@ Three layers. The first two must pass before bumping a version; the third measur
 
 | Layer | What it proves | Run |
 |---|---|---|
-| Script tests (698 checks) | Hooks log correctly, redact secrets, gate blocks/releases; plan parsing, ready logic, traceability | `bash plugins/agent-ops/tests/run.sh` · `bash plugins/product/tests/run.sh` · `bash plugins/ai-engineering/tests/run.sh` · `bash plugins/collaboration/tests/run.sh` · `bash plugins/code-standards/tests/run.sh` · `bash plugins/security/tests/run.sh` · `bash plugins/testing/tests/run.sh` · `bash plugins/seo/tests/run.sh` |
+| Script tests (700 checks) | Hooks log correctly, redact secrets, gate blocks/releases; plan parsing, ready logic, traceability | `bash plugins/agent-ops/tests/run.sh` · `bash plugins/product/tests/run.sh` · `bash plugins/ai-engineering/tests/run.sh` · `bash plugins/collaboration/tests/run.sh` · `bash plugins/code-standards/tests/run.sh` · `bash plugins/security/tests/run.sh` · `bash plugins/testing/tests/run.sh` · `bash plugins/seo/tests/run.sh` |
 | Skill evals | A real agent with the plugin does what SKILL.md promises, compared with the same agent without it | `cd plugins/<domain> && claude plugin eval . --allow-tools Write Edit Bash --no-publish` |
 | Project benchmark | On tasks you already shipped, replayed from the commit before the fix, the agent *with* the plugins beats the same agent *without* them. Scored by the hidden tests from your real fix, plus an LLM judge that sees your shipped diff | `tools/bench/bench.sh run` — see [tools/bench/README.md](tools/bench/README.md). Cases and results are private (gitignored) |
 

@@ -1,6 +1,6 @@
 {
   "name": "seo",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "description": "Technical SEO end to end: rendering, URLs and indexation (SEO.md), keyword research and mapping, Search Console analysis with traffic-drop diagnosis, Core Web Vitals, live-site crawl audits, head tags, structured data, programmatic pages, hreflang — with scripts for each.",
   "author": {
     "name": "ebuka-odih"

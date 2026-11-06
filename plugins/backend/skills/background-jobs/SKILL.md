@@ -17,6 +17,7 @@ description: Make background work correct under retries, crashes, deploys and du
 
 ## Hard rules
 - A retry must never cause a second side effect (charge, email, message): idempotency key or state check first.
-- "Due" queries respect `next_attempt_at`; a failing item is not picked up again every poll cycle.
+- "Due" queries respect `next_attempt_at`; a failing item is not picked up again every poll cycle — every failure path sets it, including pauses.
+- Classify provider errors before retrying: timeouts, 5xx and 429 are retryable with backoff; 400/401/403/404 fail the item; **402 / quota / out of credits pauses all work for that provider** (persisted pause, not per-item retry) — see `integrations`.
 - Never run the same schedule in two places (cron + worker loop, two replicas) without a lock.
 - An async engine/pool belongs to one event loop: background tasks run on the app loop or a worker with its own engine.

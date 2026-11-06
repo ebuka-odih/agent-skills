@@ -120,6 +120,7 @@ check "no goal → tells agent to write GOAL.md" 'jq -r .hookSpecificOutput.addi
 nmsg=$(jq -r .hookSpecificOutput.additionalContext <<<"$out")
 check "no goal → sizes the request first"      'grep -q "Size the request first" <<<"$nmsg" && grep -q "fast path: no GOAL.md" <<<"$nmsg"'
 check "fast path still demands evidence"       'grep -q "the command you ran and its result" <<<"$nmsg"'
+check "fast path still loads domain skills"   'grep -q "still load that domain skill first" <<<"$nmsg"'
 printf -- '---\nstatus: active\n---\n- [ ] C1: a · check: x\n' > "$PROJ/.agent-log/GOAL.md"
 out=$(send '{"hook_event_name":"UserPromptSubmit","session_id":"'$SID'","cwd":"'$PROJ'","prompt":"x"}' "$NUDGE")
 check "active goal → lists open criteria"      'jq -r .hookSpecificOutput.additionalContext <<<"$out" | grep -q "open criteria: C1"'

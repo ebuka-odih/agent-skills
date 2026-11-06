@@ -16,7 +16,7 @@ case "$start" in http://*|https://*) ;; *) echo "usage: seo-crawl.sh <https://ho
 command -v curl >/dev/null && command -v perl >/dev/null || { echo "seo-crawl needs curl and perl"; exit 2; }
 UA="${SEO_CRAWL_UA:-Mozilla/5.0 (Linux; Android 6.0.1; Nexus 5X Build/MMB29P) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Mobile Safari/537.36 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)}"
 SLOW="${SEO_CRAWL_SLOW_MS:-1800}"
-TMP="$(mktemp -d)"; trap 'rm -rf "$TMP"' EXIT
+TMP="$(mktemp -d 2>/dev/null || mktemp -d "${PWD}/.seo-tmp.XXXXXX")"; trap 'rm -rf "$TMP"' EXIT
 [ -n "$out" ] || out="$TMP/site"
 mkdir -p "$out"
 crit=0; high=0; med=0; low=0
