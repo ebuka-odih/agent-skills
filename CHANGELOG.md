@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.0.1 — 2026-11-06
+- devops evals run (blocked by usage limit on 1.0.0): ci-for-fastapi 1.0 (without 0.43), prod-migration-failed 1.0 (0.43), release-plan 1.0 (1.0).
+
 ## 1.0.0 — 2026-11-05
 - New plugin `devops` 0.1.0: `delivery-pipeline`, `ci` (+ Laravel/FastAPI/Node templates), `environments`, `infrastructure-as-code`, `observability`, `release-and-rollback`; infra guard hook; `devops-scan.sh`; 53 script tests; 3 eval cases (not yet run — usage limit).
 - Repo tests itself with its `testing` plugin: `tools/run-all-tests.sh`, `tools/mutate-bash.sh` (bash mutation testing), `tools/fuzz-hooks.sh`, `.github/workflows/ci.yml`, report in `docs/quality/TESTING.md`.

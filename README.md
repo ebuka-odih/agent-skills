@@ -202,7 +202,9 @@ Two layers. Both must pass before bumping a version.
 | collaboration · branch-for-task | **1.0** | 0.0 | Next ready task on `feat/T4-<slug>` |
 | collaboration · commit-message | 1.0 | 1.0 | Stages only task files, Conventional subject, Refs: T4/R3 |
 | collaboration · pr-description | 1.0 | 1.0 | Body from task + requirement + goal evidence, honest Not done |
-| devops · ci-for-fastapi · prod-migration-failed · release-plan | pending | pending | Not run yet: the account usage limit was hit; rerun after reset |
+| devops · ci-for-fastapi | **1.0** | 0.43 | Frozen `uv sync`, ruff/mypy/pytest, audit, least-privilege permissions, concurrency |
+| devops · prod-migration-failed | **1.0** | 0.43 | Refuses `migrate:fresh` on prod; rollback, `migrate:status`, backup, forward fix |
+| devops · release-plan | 1.0 | 1.0 | Flags the non-backward-compatible rename; expand/contract, rollback, verification |
 | testing · mutation-setup | **1.0** | 0.0 | Pest `--mutate` + `covers()`, boundary tests that kill mutants, scoped `--min` gate |
 | testing · property-tests | **1.0** | 0.2 | Hypothesis invariants, aware datetimes, invalid inputs, kept boundary examples |
 | testing · strategy-for-change | **1.0** | 0.2 | Property + mutation for the fee, contract/load for the endpoint, a11y for UI, sized by budget |

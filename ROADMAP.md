@@ -9,7 +9,6 @@ Each domain is one plugin. Each line under it is one skill. Orchestrator first.
 - `infrastructure-as-code` — platform choice, Dockerfiles, Terraform rules
 - `observability` — logs, metrics, traces, SLOs, alerts
 - `release-and-rollback` — strategies, migrations, flags, incident runbook
-- Next: run the 3 eval cases (blocked by usage limit on 2026-11-05)
 
 ## Everything planned is built — next ideas
 - Promote cross-project lessons (ai-engineering learning loop) into house defaults
