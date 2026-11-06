@@ -11,14 +11,14 @@ HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 . "$HERE/ui-patterns.sh"
 
 input="$(cat)"
-path=$(jq -r '.tool_input.file_path // empty' <<<"$input")
-[ -n "$path" ] || exit 0
+fpath=$(jq -r '.tool_input.file_path // empty' <<<"$input")
+[ -n "$fpath" ] || exit 0
 text=$(jq -r '[.tool_input.new_string // empty, .tool_input.content // empty, (.tool_input.edits // [] | map(.new_string) | join("\n"))] | map(select(. != "")) | join("\n")' <<<"$input")
 [ -n "$text" ] || exit 0
 
-hits=$(printf '%s\n' "$text" | awk '{print NR "\t" $0}' | ui_scan_text "$path" | head -8)
+hits=$(printf '%s\n' "$text" | awk '{print NR "\t" $0}' | ui_scan_text "$fpath" | head -8)
 [ -n "$hits" ] || exit 0
-msg="frontend: $(basename "$path") has UI values that bypass the design tokens (line numbers are within the edited text):
+msg="frontend: $(basename "$fpath") has UI values that bypass the design tokens (line numbers are within the edited text):
 $hits
 Use semantic tokens (bg-primary, text-muted-foreground, border-border, bg-destructive, or a status token like bg-warning), the spacing/type scale instead of arbitrary [values], and cva variants instead of inline styles. New colours go in globals.css (:root, .dark, @theme inline). Documented exceptions belong in docs/ui/UI.md."
 jq -nc --arg m "$msg" '{hookSpecificOutput:{hookEventName:"PostToolUse", additionalContext:$m}}'

@@ -30,7 +30,15 @@ if [ -n "$css" ] && [ -f "$css" ]; then
   if grep -q '^[[:space:]]*:root' "$css"; then echo "- token block: :root"
   elif grep -qE '^[[:space:]]*--color-[a-z]' "$css" && grep -q '@theme' "$css"; then echo "- token block: @theme ($(grep -cE '^[[:space:]]*--color-' "$css") colour tokens, Tailwind v4 style)"
   else gap "$css has no token block (:root or @theme with --color-*)"; fi
-  grep -q '\.dark' "$css" && echo "- dark theme tokens: yes" || gap "no .dark token block (dark mode not themed)"
+  # Dark theme can live in any CSS file and be keyed by class, data attribute, custom variant or media query
+  DARK_RE='\.dark([^A-Za-z0-9_-]|$)|\[data-[a-z-]*=["'"'"']?dark|@custom-variant[[:space:]]+dark|prefers-color-scheme:[[:space:]]*dark'
+  dark_files=$( { echo "$css"; find . \( -path ./node_modules -o -path ./dist -o -path ./public -o -path ./build \) -prune -o -name '*.css' -print 2>/dev/null; } | sed 's#^\./##' | sort -u | while read -r f; do [ -f "$f" ] && grep -qE "$DARK_RE" "$f" && echo "$f"; done | paste -sd, -)
+  if [ -n "$dark_files" ]; then
+    how=$(cat $(tr ',' ' ' <<<"$dark_files") 2>/dev/null | grep -oE "$DARK_RE" | sed -E 's/\.dark.*/.dark class/; s/\[data-([a-z-]*)=.*/[data-\1] attribute/; s/@custom-variant.*/@custom-variant dark/; s/prefers-color-scheme.*/prefers-color-scheme media query/' | sort -u | paste -sd, -)
+    n=$(tr ',' '\n' <<<"$dark_files" | grep -c .); shown=$(tr ',' '\n' <<<"$dark_files" | head -3 | paste -sd, -)
+    [ "$n" -gt 3 ] && shown="$shown and $((n-3)) more"
+    echo "- dark theme: yes ($(sed 's/,/, /g' <<<"$how"); in $(sed 's/,/, /g' <<<"$shown"))"
+  else gap "no dark theme found (.dark, [data-*=dark], @custom-variant dark or prefers-color-scheme)"; fi
   grep -q '@theme' "$css" && echo "- @theme mapping: yes" || echo "- @theme mapping: no (Tailwind v3 config?)"
   for t in success warning; do grep -qE -- "--(color-)?$t:" "$css" || echo "- note: no --$t token (status colours may be hard-coded)"; done
 else gap "no global CSS with tokens found"; fi

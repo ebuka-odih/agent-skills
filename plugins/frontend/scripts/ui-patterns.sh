@@ -20,10 +20,10 @@ ui_skip() {
 
 # ui_scan_text <path>  (stdin: lineno<TAB>text)
 ui_scan_text() {
-  local path="$1" ext="${1##*.}"
+  local fpath="$1" ext="${1##*.}"
   case "$ext" in tsx|jsx|ts|js|vue|svelte|css|scss|html) ;; *) return 0 ;; esac
-  ui_skip "$path" && return 0
-  UI_PATH="$path" UI_EXT="$ext" awk -F'\t' '
+  ui_skip "$fpath" && return 0
+  UI_PATH="$fpath" UI_EXT="$ext" awk -F'\t' '
     BEGIN { path=ENVIRON["UI_PATH"]; ext=ENVIRON["UI_EXT"]; raw=ENVIRON["UI_RAW_RE"]; arb=ENVIRON["UI_ARB_RE"];
             lit=ENVIRON["UI_LIT_RE"]; sty=ENVIRON["UI_STYLE_RE"] }
     {

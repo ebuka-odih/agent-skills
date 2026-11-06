@@ -7,8 +7,8 @@
 set -u
 
 scan_text() { # path, reads text on stdin with "lineno<TAB>text" lines
-  local path="$1" ext="${1##*.}" base; base=$(basename "$1")
-  local is_test=0; grep -qiE '(^|/)(tests?|__tests__|spec)/|(_test|\.test|\.spec|Test)\.[a-z]+$' <<<"$path" && is_test=1
+  local fpath="$1" ext="${1##*.}" base; base=$(basename "$1")
+  local is_test=0; grep -qiE '(^|/)(tests?|__tests__|spec)/|(_test|\.test|\.spec|Test)\.[a-z]+$' <<<"$fpath" && is_test=1
   local debug=""
   case "$ext" in
     php) debug='(^|[^>:$a-zA-Z_])(dd|dump|var_dump|print_r|ray)\(' ;;
@@ -16,7 +16,7 @@ scan_text() { # path, reads text on stdin with "lineno<TAB>text" lines
     js|jsx|ts|tsx|mjs|cjs|vue|svelte) debug='console\.(log|debug|trace)\(|(^|[^a-zA-Z_])debugger;?[[:space:]]*$' ;;
   esac
   # Regex goes through ENVIRON: awk -v would eat the backslashes in \(.
-  LS_PATH="$path" LS_DEBUG="$debug" LS_TEST="$is_test" awk -F'\t' '
+  LS_PATH="$fpath" LS_DEBUG="$debug" LS_TEST="$is_test" awk -F'\t' '
     BEGIN { path=ENVIRON["LS_PATH"]; debug=ENVIRON["LS_DEBUG"]; is_test=ENVIRON["LS_TEST"]+0 }
     {
       n=$1; t=substr($0, index($0, "\t")+1)
@@ -29,8 +29,8 @@ scan_text() { # path, reads text on stdin with "lineno<TAB>text" lines
 }
 
 if [ "${1:-}" = "--stdin" ]; then
-  path="${2:-unknown}"
-  awk '{print NR "\t" $0}' | scan_text "$path"
+  fpath="${2:-unknown}"
+  awk '{print NR "\t" $0}' | scan_text "$fpath"
   exit 0
 fi
 

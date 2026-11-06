@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.1.1 — 2026-11-06
+- `frontend` 0.1.1: ui-scan recognises dark themes keyed by `.dark`, `[data-*="dark"]`, `@custom-variant dark` or `prefers-color-scheme`, in any CSS file (was a false "no .dark" gap on a real project); file list normalised and capped.
+- `frontend` 0.1.1 / `code-standards` 0.1.4: scanner functions no longer use a shell variable named `path` (it clobbered zsh's command search path when sourced). 8 new regression tests; mutation still 100%.
+
 ## 1.1.0 — 2026-11-06
 - New plugin `frontend` 0.1.0: `ui-system`, `shadcn-tailwind`, `dashboard-patterns`, `ui-consistency`, `component-testing`, `frontend-performance`; token hook; `ui-scan.sh`; 43 script tests; ui-patterns mutation 9/9; evals token-drift-fix 1.0 (without 0.75), dashboard-page 1.0 (1.0), ui-review 1.0 (1.0). Graders read final files / use regex checks — LLM judges on long traces were truncated.
 - Tooling: mutation runner gains awk-rule and exported-regex operators (leftover-scan now 5/5); fuzzing covers 10 hooks.

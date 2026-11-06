@@ -55,7 +55,7 @@ printf 'export const Button = () => <button className="bg-primary p-[3px]" />\n'
 printf 'export const T = () => <div className="bg-blue-600 p-[13px]" style={{ width: 3 }}>\n<span className="text-gray-500">x</span></div>\n' > "$W/src/features/orders/table.tsx"
 out=$(bash "$SCAN" "$W")
 check "components.json + cssVariables"  'grep -q "components.json found (style: new-york, cssVariables: true)" <<<"$out"'
-check "no .dark → gap"                  'grep -q "no .dark token block" <<<"$out"'
+check "no dark theme → gap"             'grep -q "no dark theme found" <<<"$out"'
 check "@theme detected"                 'grep -q "@theme mapping: yes" <<<"$out"'
 check "missing status tokens noted"     'grep -q "no --warning token" <<<"$out"'
 check "primitives counted"              'grep -q "primitives: .*components/ui (1 files)" <<<"$out"'
@@ -73,6 +73,27 @@ printf '@import "tailwindcss";\n@theme {\n  --color-primary: oklch(0.2 0 0);\n  
 vout=$(bash "$SCAN" "$V")
 check "@theme-only tokens accepted"     'grep -q "token block: @theme (" <<<"$vout" && ! grep -q "no token block" <<<"$vout"'
 check "--color-success counts"          '! grep -q "no --success token" <<<"$vout"'
+echo "dark-theme detection"
+mkd() { local d="$TMP/$1"; mkdir -p "$d/src"; echo '{"dependencies":{"react":"^19"}}' > "$d/package.json"; printf ':root {\n  --primary: oklch(0.2 0 0);\n}\n' > "$d/src/index.css"; printf '%b' "$2" > "$d/src/${3:-index.css}"; [ "${3:-}" != "" ] && printf ':root {\n  --primary: oklch(0.2 0 0);\n}\n' > "$d/src/index.css"; echo "$d"; }
+d1=$(mkd attr ':root {\n  --primary: red;\n}\nhtml[data-dashboard-theme="dark"] {\n  --primary: blue;\n}\n'); o1=$(bash "$SCAN" "$d1")
+check "data attribute dark recognised"   'grep -q "dark theme: yes (\[data-dashboard-theme\] attribute" <<<"$o1" && ! grep -q "no dark theme" <<<"$o1"'
+d2=$(mkd variant '@custom-variant dark (&:where([data-theme=dark] *));\n:root {\n  --primary: red;\n}\n'); o2=$(bash "$SCAN" "$d2")
+check "@custom-variant dark recognised"  'grep -q "dark theme: yes" <<<"$o2" && grep -q "@custom-variant dark" <<<"$o2"'
+d3=$(mkd media ':root {\n  --primary: red;\n}\n@media (prefers-color-scheme: dark) {\n  :root { --primary: blue; }\n}\n'); o3=$(bash "$SCAN" "$d3")
+check "prefers-color-scheme recognised"  'grep -q "prefers-color-scheme media query" <<<"$o3"'
+d4=$(mkd split 'html.dark {\n  --primary: blue;\n}\n' theme-dark.css); o4=$(bash "$SCAN" "$d4")
+check "dark tokens in another css file"   'grep -q "dark theme: yes (.dark class; in src/theme-dark.css)" <<<"$o4"'
+check "dark-ish class name not counted"   'd5=$(mkd fake ".darkmode-toggle { color: red; }\n"); ! bash "$SCAN" "$d5" | grep -q "dark theme: yes"'
+
+echo "zsh-safe sourcing"
+if command -v zsh >/dev/null 2>&1; then
+  zo=$(zsh -c '. "$1"; printf "1\tclassName=\"bg-blue-600\"\n" | ui_scan_text src/a.tsx' _ "$ROOT/scripts/ui-patterns.sh")
+  check "ui_scan_text works under zsh"    'grep -q "src/a.tsx:1: raw-colour" <<<"$zo"'
+  zc=$(zsh -c 'printf "breakpoint()\n" | bash "$1" --stdin app/x.py' _ "$ROOT/../code-standards/scripts/leftover-scan.sh")
+  check "leftover-scan --stdin from zsh"  'grep -q "app/x.py:1: debug" <<<"$zc"'
+  check "no shell \$path in scanners"     '! grep -nE "(^|[^A-Za-z_])\\\$path([^A-Za-z_]|$)|local path=|^path=" "$ROOT/scripts/"*.sh "$ROOT/../code-standards/scripts/"*.sh'
+else ok "zsh not installed — skipped"; fi
+
 check "no react app → message"          'mkdir -p "$TMP/none" && bash "$SCAN" "$TMP/none" | grep -q "No React app found"'
 
 echo
