@@ -236,6 +236,24 @@ flowchart LR
 - **Done-gate**: a Stop hook refuses to let the agent end its turn while criteria are unverified. It blocks once per attempt, so it can't loop. `AGENT_OPS_GATE=off` disables it.
 - **Session report**: `bash plugins/agent-ops/scripts/report.sh .agent-log/sessions/<file>.jsonl` lists failures, files touched, and gap signals like "claims tests pass but none ran after the last edit".
 
+### Project benchmark — first real results (2026-11-06, Claude Opus 5.5, 1 run each)
+
+Four tasks, replayed from the commit before the shipped change. Scoring uses the real tests from the fix plus an LLM judge.
+
+| Task | Plugins | Score with / without | Time with / without | Cost with / without | Files changed |
+|---|---|---|---|---|---|
+| Project 1 · distances read "1000 m" | code-standards, testing | 1.0 / 1.0 | 202 s / 728 s | $0.44 / $0.54 | 3 / 3 |
+| Project 1 · search links lose `?q=` (SEO dispatcher) | seo, code-standards, testing | 1.0 / 1.0 | 818 s / 177 s | $0.76 / $0.55 | 3 / 2 |
+| Project 1 · `\u2014` shown instead of "—" | ai-engineering, code-standards, testing | 1.0 / 1.0 | 637 s / 261 s | $1.23 / $0.71 | 6 / 4 |
+| Greenfield · brief → deployable booking API | 8 plugins | 1.0 / 1.0 | 313 s / 361 s | $1.25 / $0.93 | 21 / 15 |
+| **Total** | | **4/4 vs 4/4** | **1,970 s vs 1,527 s** | **$3.68 vs $2.73** | |
+
+**What this says, honestly:**
+- **No quality gain yet on these tasks.** The base model already solves well-specified fixes. The task wording (symptom, interface, expected values) did most of the work.
+- **The plugins cost about 35% more and took 29% longer in total.** They wrote more tests and docs (21 vs 15 files on greenfield), but the process didn't pay off on small fixes.
+- **The benchmark caught three bugs in its own harness**, all fixed: the judge silently blocked by a Stop hook, hidden tests leaking into later checks, and an ES-module-only hidden test. Without those fixes, the greenfield result would have read 0.46 vs 0.76.
+- **Next:** harder cases where the skills should matter (vague requests, multi-step features, project conventions, security), and a fast path that skips the goal ceremony for small, clear fixes.
+
 ## Feedback from real projects
 
 Agents working on real projects report what the skills missed. Each report becomes a general change in this repo, never per-project tooling: it's logged in [FEEDBACK.md](FEEDBACK.md), built with tests, versioned, then handed back to the project. The repo-local `improve-from-feedback` skill runs that loop.
@@ -246,7 +264,7 @@ Three layers. The first two must pass before bumping a version; the third measur
 
 | Layer | What it proves | Run |
 |---|---|---|
-| Script tests (589 checks) | Hooks log correctly, redact secrets, gate blocks/releases; plan parsing, ready logic, traceability | `bash plugins/agent-ops/tests/run.sh` · `bash plugins/product/tests/run.sh` · `bash plugins/ai-engineering/tests/run.sh` · `bash plugins/collaboration/tests/run.sh` · `bash plugins/code-standards/tests/run.sh` · `bash plugins/security/tests/run.sh` · `bash plugins/testing/tests/run.sh` · `bash plugins/seo/tests/run.sh` |
+| Script tests (591 checks) | Hooks log correctly, redact secrets, gate blocks/releases; plan parsing, ready logic, traceability | `bash plugins/agent-ops/tests/run.sh` · `bash plugins/product/tests/run.sh` · `bash plugins/ai-engineering/tests/run.sh` · `bash plugins/collaboration/tests/run.sh` · `bash plugins/code-standards/tests/run.sh` · `bash plugins/security/tests/run.sh` · `bash plugins/testing/tests/run.sh` · `bash plugins/seo/tests/run.sh` |
 | Skill evals | A real agent with the plugin does what SKILL.md promises, compared with the same agent without it | `cd plugins/<domain> && claude plugin eval . --allow-tools Write Edit Bash --no-publish` |
 | Project benchmark | On tasks you already shipped, replayed from the commit before the fix, the agent *with* the plugins beats the same agent *without* them. Scored by the hidden tests from your real fix, plus an LLM judge that sees your shipped diff | `tools/bench/bench.sh run` — see [tools/bench/README.md](tools/bench/README.md). Cases and results are private (gitignored) |
 

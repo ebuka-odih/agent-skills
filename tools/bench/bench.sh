@@ -49,9 +49,18 @@ score() {
         label="hidden tests from $(jq -r '.fix' "$case" | cut -c1-10)"
         local fix paths run; fix=$(jq -r '.fix' "$case"); run=$(jq -r ".checks[$i].run" "$case")
         paths=$(jq -r ".checks[$i].paths[]" "$case")
-        # the agent never sees these files: they're copied in from the shipped fix only now
+        # the agent never sees these files: copied in from the shipped fix only now, run, then taken out again
+        # (an agent file at the same path is kept aside and restored, so later checks see only the agent's work)
+        local hp bk="$wd/.bench-hidden-backup"
+        mkdir -p "$bk"
+        for hp in $paths; do [ -f "$wd/$hp" ] && { mkdir -p "$bk/$(dirname "$hp")"; cp "$wd/$hp" "$bk/$hp"; }; done
         # shellcheck disable=SC2086
         if (cd "$wd" && git checkout "$fix" -- $paths) >/dev/null 2>&1 && (cd "$wd" && bash -c "$run") > "$wd/.bench-check-$i.log" 2>&1; then pass=true; fi
+        # shellcheck disable=SC2086
+        (cd "$wd" && git rm -q --cached -- $paths) >/dev/null 2>&1
+        for hp in $paths; do
+          if [ -f "$bk/$hp" ]; then cp "$bk/$hp" "$wd/$hp"; else rm -f -- "$wd/$hp"; fi
+        done
         detail=$(tail -3 "$wd/.bench-check-$i.log" 2>/dev/null | tr '\n' ' ' | cut -c1-200) ;;
       grep)
         local file pat absent; file=$(jq -r ".checks[$i].file" "$case"); pat=$(jq -r ".checks[$i].pattern" "$case"); absent=$(jq -r ".checks[$i].absent // false" "$case")

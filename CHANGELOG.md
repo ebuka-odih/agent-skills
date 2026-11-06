@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.6.1 — 2026-11-06
+- Bench harness: hidden tests are copied in, run, then removed again, and an agent file at the same path is restored. Before this, the hidden test file leaked into later checks (the agent's `npm test` ran it). The greenfield example's hidden test now runs as `.mjs`, so a CommonJS or ESM app both load. 65 harness tests.
+- First real benchmark results, 4 tasks (3 from project 1, 1 greenfield): quality 4/4 with and without plugins; plugins +35% cost and +29% time in total. Details and next steps are in the README. The harness bugs found along the way are fixed.
+
 ## 1.6.0 — 2026-11-06
 - `frontend` 0.2.0: new `browser-checks` skill and `ui-check` runner (`scripts/ui-check/`), built on Playwright + axe.
   - Runs pages × widths × themes, with media, class, attribute or storage theme strategies.

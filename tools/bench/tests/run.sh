@@ -83,6 +83,16 @@ check "judge runs without user settings"       'grep -q "judge-args: .*--setting
 check "judge runs outside the repo"           '! grep -q "judge-cwd: $TMP/res" "$FAKE_LOG.judge" && ! grep -q "judge-cwd: $HERE" "$FAKE_LOG.judge"'
 check "progress cost is rounded"              'has "$out" "· \$0.12 ·"'
 
+echo "hidden tests are removed again"
+HW="$TMP/hw"; git clone -q "$R" "$HW"; git -C "$HW" -c advice.detachedHead=false checkout -q "$BASE"
+mkdir -p "$HW/tests"; echo "agent's own test" > "$HW/tests/test_add.sh"
+mkdir -p "$TMP/hc/order"; jq '.checks = [{type:"hidden_tests",paths:["tests/test_add.sh"],run:"bash tests/test_add.sh",weight:1},{type:"cmd",run:"grep -q \"agent.s own test\" tests/test_add.sh",weight:1}]' "$C/add-fix/case.json" > "$TMP/hc/order/case.json"
+hs=$(bash "$B" score "$TMP/hc/order" "$HW")
+check "agent file at hidden path restored"    '[ "$(cat "$HW/tests/test_add.sh")" = "agent'"'"'s own test" ] && [ "$(jq -r ".checks[1].pass" <<<"$hs")" = true ]'
+HW2="$TMP/hw2"; git clone -q "$R" "$HW2"; git -C "$HW2" -c advice.detachedHead=false checkout -q "$BASE"
+bash "$B" score "$C/add-fix" "$HW2" >/dev/null
+check "hidden test file gone after scoring"   '[ ! -e "$HW2/tests/test_add.sh" ] && ! git -C "$HW2" diff --cached --name-only | grep -q test_add'
+
 echo "rescore"
 cp "$C/add-fix/case.json" "$TMP/case.bak"
 jq '.checks[4].rubric = "RESCORED rubric"' "$TMP/case.bak" > "$C/add-fix/case.json"

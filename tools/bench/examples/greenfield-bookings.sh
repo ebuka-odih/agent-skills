@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Create the public greenfield benchmark: a repo whose base commit holds only a product brief, and whose
+# Create the public greenfield benchmark (hidden tests run as .mjs so either module system the agent picks can load): a repo whose base commit holds only a product brief, and whose
 # "fix" commit holds a reference implementation + the hidden acceptance tests. Then write the case.
 # Usage: greenfield-bookings.sh <repo-dir> [cases-dir]     (no dependencies beyond Node ≥ 20 and git)
 set -euo pipefail
@@ -133,7 +133,7 @@ jq -n --arg repo "$(pwd)" --arg base "$base" --arg fix "$fix" '{
   plugins: ["product","architecture","code-standards","testing","security","devops","collaboration","agent-ops"],
   setup: "", max_turns: 120, timeout: 3600,
   checks: [
-    {type: "hidden_tests", paths: ["test/acceptance.test.js"], run: "node --test test/acceptance.test.js", weight: 6},
+    {type: "hidden_tests", paths: ["test/acceptance.test.js"], run: "cp test/acceptance.test.js test/acceptance.hidden.mjs && node --test test/acceptance.hidden.mjs; rc=$?; rm -f test/acceptance.hidden.mjs; exit $rc", weight: 6},
     {type: "cmd", run: "npm test", weight: 1},
     {type: "cmd", run: "ls Dockerfile", weight: 1},
     {type: "cmd", run: "ls .github/workflows/*.y*ml", weight: 1},
