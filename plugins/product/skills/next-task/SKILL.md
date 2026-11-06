@@ -53,3 +53,7 @@ Then stop, unless the user said "keep going" — then loop to step 1. Stop the l
 - One task per goal. Never mix two tasks in one GOAL.md.
 - Never tick a task without a closed goal file as evidence.
 - Work outside the plan → add it as a task first (with `covers:`), then do it.
+
+## Hand-off (project loop)
+Skills share work through files, not memory. When this skill's output is written, log it and let the loop pick the next step:
+`bash <product plugin>/scripts/loop.sh log build "T<n> done"` then `loop.sh next` (skill `product:project-loop`). If an input file this skill needs is missing, name it and the skill that writes it instead of guessing.

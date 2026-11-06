@@ -35,7 +35,7 @@ F
 # --- fake judge: passes when the agent diff adds the + fix; saves the prompt
 cat > "$TMP/fake-judge" <<'F'
 #!/usr/bin/env bash
-p=$(cat); printf '%s\n=====\n' "$p" >> "$FAKE_LOG.judge"
+p=$(cat); printf 'judge-args: %s\njudge-cwd: %s\n%s\n=====\n' "$*" "$PWD" "$p" >> "$FAKE_LOG.judge"
 if printf '%s' "$p" | sed -n '/AGENT.S CHANGES/,/WHAT THE DEVELOPER/p' | grep -q '^+echo \$(( \$1 + \$2 ))'; then v='{"pass": true, "reason": "adds"}'; else v='{"pass": false, "reason": "still subtracts"}'; fi
 jq -n --arg v "Verdict: $v" '{result: $v}'
 F
@@ -79,6 +79,23 @@ check "delta is with − without"               'grep -q "| add-fix | +0.54 |" "
 check "failed checks listed"                  'grep -q "add-fix \[without 1\]: hidden tests" "$TMP/res/report.md"'
 check "progress line per run"                 'has "$out" "score 0.61 (5/6 checks) · 4 turns"'
 
+check "judge runs without user settings"       'grep -q "judge-args: .*--setting-sources project,local" "$FAKE_LOG.judge"'
+check "judge runs outside the repo"           '! grep -q "judge-cwd: $TMP/res" "$FAKE_LOG.judge" && ! grep -q "judge-cwd: $HERE" "$FAKE_LOG.judge"'
+check "progress cost is rounded"              'has "$out" "· \$0.12 ·"'
+
+echo "rescore"
+cp "$C/add-fix/case.json" "$TMP/case.bak"
+jq '.checks[4].rubric = "RESCORED rubric"' "$TMP/case.bak" > "$C/add-fix/case.json"
+: > "$FAKE_LOG.judge"
+rs=$(bash "$B" rescore "$TMP/res" --cases "$C" 2>&1)
+check "rescore re-grades every run"           '[ "$(grep -c "^rescored add-fix" <<<"$rs")" = 2 ] && [ "$(wc -l < "$TMP/res/runs.jsonl" | tr -d " ")" = 2 ]'
+check "rescore uses the new rubric"           'grep -q "RESCORED rubric" "$FAKE_LOG.judge"'
+check "rescore keeps turns/cost"              '[ "$(jq -r "select(.arm==\"with\") | .turns" "$TMP/res/runs.jsonl")" = 4 ]'
+check "rescore judge sees agent-only diff"    '! sed -n "/AGENT.S CHANGES/,/WHAT THE DEVELOPER/p" "$FAKE_LOG.judge" | grep -q test_add'
+check "rescore keeps scores stable"           'grep -q "| add-fix | with | 0.61 |" "$TMP/res/report.md"'
+cp "$TMP/case.bak" "$C/add-fix/case.json"
+check "rescore without runs: exit 2"          'bash "$B" rescore "$TMP/nope" >/dev/null 2>&1; [ $? = 2 ]'
+
 echo "options and errors"
 : > "$FAKE_LOG"
 bash "$B" run --cases "$C" --runs 2 --arms without --out "$TMP/res2" >/dev/null 2>&1
@@ -105,6 +122,12 @@ check "unknown base commit skipped"           'has "$out" "skip badbase: 0000000
 check "incomplete case skipped"               'has "$out" "skip incomplete: case.json needs repo, base, task, checks"'
 check "missing cases dir: exit 2"             'bash "$B" run --cases "$TMP/nope" >/dev/null 2>&1; [ $? = 2 ]'
 check "no command: usage, exit 2"             'bash "$B" >/dev/null 2>&1; [ $? = 2 ]'
+
+printf '#!/usr/bin/env bash\ncat >/dev/null; echo "{\\"result\\": \\"\\"}"\n' > "$TMP/mute-judge"; chmod +x "$TMP/mute-judge"
+JC="$TMP/jc"; mkdir -p "$JC/judgeonly"; jq '.checks = [{type:"llm",rubric:"x",weight:1}]' "$C/add-fix/case.json" > "$JC/judgeonly/case.json"
+W0="$TMP/w0"; git clone -q "$R" "$W0"
+js=$(BENCH_JUDGE="$TMP/mute-judge" bash "$B" score "$JC/judgeonly" "$W0")
+check "empty judge answer → fail, says so"    '[ "$(jq -r ".checks[0].pass" <<<"$js")" = false ] && [ "$(jq -r ".checks[0].detail" <<<"$js")" = "judge gave no verdict" ]'
 
 echo "score (standalone)"
 W="$TMP/w"; git clone -q "$R" "$W"; git -C "$W" -c advice.detachedHead=false checkout -q "$BASE"

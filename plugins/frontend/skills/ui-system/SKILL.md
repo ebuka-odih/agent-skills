@@ -34,3 +34,7 @@ House defaults: [references/defaults.md](references/defaults.md).
 - A pattern used on 2+ screens becomes an app component in `components/app/`, with a story.
 - Every data view has loading, empty and error states — designed, not afterthoughts.
 - Accessibility is part of the component, not a later pass (labels, focus, contrast, keyboard).
+
+## Hand-off (project loop)
+Skills share work through files, not memory. When this skill's output is written, log it and let the loop pick the next step:
+`bash <product plugin>/scripts/loop.sh log foundation/design "UI.md"` then `loop.sh next` (skill `product:project-loop`). If an input file this skill needs is missing, name it and the skill that writes it instead of guessing.

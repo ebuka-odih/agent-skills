@@ -35,3 +35,7 @@ House defaults: [references/defaults.md](references/defaults.md).
 - Production deploys are reversible in minutes; if not, it's not ready.
 - No deploy, migration, infra change or destructive command against production without the user's explicit go-ahead. The infra guard hook asks before the dangerous ones.
 - Secrets never pass through logs, CI output or agent chat.
+
+## Hand-off (project loop)
+Skills share work through files, not memory. When this skill's output is written, log it and let the loop pick the next step:
+`bash <product plugin>/scripts/loop.sh log foundation/design "DELIVERY.md + CI"` then `loop.sh next` (skill `product:project-loop`). If an input file this skill needs is missing, name it and the skill that writes it instead of guessing.

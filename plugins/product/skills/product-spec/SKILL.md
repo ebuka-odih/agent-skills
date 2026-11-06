@@ -37,3 +37,9 @@ Fill [templates/SPEC.md](templates/SPEC.md) into `docs/spec/SPEC.md`. Show the u
 - Never write tech choices in the spec ("use Redis"). That belongs in ARCHITECTURE.md.
 - Requirement IDs are permanent. Dropped requirements stay listed with `dropped` and a reason.
 - `must` requirements ≤ ~12 for a first release. More → split into releases.
+
+Always fill `## Profile` (ui / ai / seo: yes|no) with the user — the project loop routes by it.
+
+## Hand-off (project loop)
+Skills share work through files, not memory. When this skill's output is written, log it and let the loop pick the next step:
+`bash <product plugin>/scripts/loop.sh log foundation/define "SPEC.md"` then `loop.sh next` (skill `product:project-loop`). If an input file this skill needs is missing, name it and the skill that writes it instead of guessing.

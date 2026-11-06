@@ -1,6 +1,6 @@
 ---
 name: product
-description: Entry point for running a long project from idea to shipped — spec, architecture, plan, then one task at a time. Use when starting a new project or product, when the user says "new project", "let's build X", "where are we", "what's next", "resume the project", "what's left", or when a session starts in a project that has docs/spec/SPEC.md or docs/plan/PLAN.md. Routes to product-spec, system-design, project-plan and next-task.
+description: Entry point for running a long project from idea to shipped — spec, architecture, plan, then one task at a time. Use when starting a new project or product, when the user says "new project", "let's build X", "where are we", "what's next", "resume the project", "what's left", or when a session starts in a project that has docs/spec/SPEC.md or docs/plan/PLAN.md. Routes to project-loop (end-to-end conductor), product-spec, prototype, system-design, project-plan and next-task.
 ---
 
 # Product lifecycle (orchestrator)
@@ -17,18 +17,21 @@ Long projects fail when each session starts from zero. Three files carry the pro
 ```
 product/skills/
 ├── product/        ← you are here: decide which stage the project is in
-├── product-spec/   interview the user → SPEC.md with numbered requirements R1, R2…
+├── project-loop/   the conductor: every skill in one loop, foundation → deploy → evolve; adopt existing code
+├── product-spec/   interview the user → SPEC.md with numbered requirements R1, R2… and risks K1…
+├── prototype/      answer a risky question cheaply → verdict → SPEC/ADR
 ├── project-plan/   slice SPEC into milestones M1… and tasks T1… → PLAN.md
 └── next-task/      pick the next ready task → GOAL.md → work → verify → update PLAN
 ```
 
 ## Pick the stage
 
-Check which files exist, in this order. The first missing one is the stage.
+Run `bash "${CLAUDE_PLUGIN_ROOT}/scripts/loop.sh" status` — it checks every contract file (including UI/AI/SEO/security/delivery docs, open risks and the plan) and names the next skill. For the full end-to-end method, or an existing codebase, use `project-loop`. The short version:
 
 | Missing | Stage | Do |
 |---|---|---|
 | SPEC.md | Define | `product-spec` |
+| — (SPEC has open `- [ ] K…` risks) | Prototype | `prototype` |
 | ARCHITECTURE.md | Design | `system-design` (architecture plugin) — it reads SPEC.md |
 | `docs/ai/AI.md`, and SPEC has requirements a model would fulfil | AI design | `ai-design` (ai-engineering plugin) |
 | PLAN.md | Plan | `project-plan` |

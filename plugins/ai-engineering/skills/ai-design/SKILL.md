@@ -61,3 +61,7 @@ Walk [references/decision-areas.md](references/decision-areas.md). For each area
 - **Evals before prompt tuning.** No eval set → no "it works".
 - **Deterministic code first.** If a rule, regex or SQL query solves it reliably, don't use a model.
 - **Every call is logged** with feature ID, prompt version, model, tokens, cost, latency, outcome.
+
+## Hand-off (project loop)
+Skills share work through files, not memory. When this skill's output is written, log it and let the loop pick the next step:
+`bash <product plugin>/scripts/loop.sh log foundation/design "AI.md"` then `loop.sh next` (skill `product:project-loop`). If an input file this skill needs is missing, name it and the skill that writes it instead of guessing.

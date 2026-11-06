@@ -45,3 +45,9 @@ Details: [references/status.md](references/status.md).
 - Task IDs are permanent; never renumber.
 - Only `next-task` and `verify-done` change a task to `[x]`, and only with evidence.
 - A milestone is done when all its tasks are `[x]` or `[-]` **and** its demo check passes.
+
+Milestone status moves `planned → active → done → released`; `loop.sh` uses it to send a done milestone to release.
+
+## Hand-off (project loop)
+Skills share work through files, not memory. When this skill's output is written, log it and let the loop pick the next step:
+`bash <product plugin>/scripts/loop.sh log foundation/plan "PLAN.md"` then `loop.sh next` (skill `product:project-loop`). If an input file this skill needs is missing, name it and the skill that writes it instead of guessing.

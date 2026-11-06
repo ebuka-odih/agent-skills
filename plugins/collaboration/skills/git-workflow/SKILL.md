@@ -42,3 +42,7 @@ House defaults: [references/defaults.md](references/defaults.md) — edit to cha
 - Every PR links its task (`T<id>`), and every claim in it has evidence.
 
 The `collaboration` hook enforces the first rule and the commit-message format, and asks before committing straight to `main`.
+
+## Hand-off (project loop)
+Skills share work through files, not memory. When this skill's output is written, log it and let the loop pick the next step:
+`bash <product plugin>/scripts/loop.sh log build "PR merged"` then `loop.sh next` (skill `product:project-loop`). If an input file this skill needs is missing, name it and the skill that writes it instead of guessing.

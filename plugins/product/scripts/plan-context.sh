@@ -29,5 +29,7 @@ else
   msg="product: spec-driven project. Active milestone: ${active:-none}. In progress: ${inprog:-none}. Next ready task: ${ready:-none}. Blocked: ${blocked:-none}. Last progress: ${last:-none}. When the user asks to build, continue or 'what next', use the next-task skill: one task per goal, tasks come from docs/plan/PLAN.md, update PLAN.md and its progress log when a task closes."
 fi
 
+loopnext=$(bash "$HERE/loop.sh" next "$root" 2>/dev/null | head -1)
+[ -n "$loopnext" ] && msg="$msg Project loop next: $loopnext (see product:project-loop)."
 jq -nc --arg m "$msg" '{hookSpecificOutput:{hookEventName:"SessionStart", additionalContext:$m}}'
 exit 0

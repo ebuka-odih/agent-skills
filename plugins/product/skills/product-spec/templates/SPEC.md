@@ -40,6 +40,16 @@ updated: YYYY-MM-DD
 | Metric | Target | By |
 |---|---|---|
 
+## Profile
+Which domains this project needs. The project loop routes only to these (and `loop.sh plugins` switches the others off for this repo, so their skills don't cost context).
+- ui: yes        <!-- web/app screens → frontend -->
+- ai: no         <!-- LLM / embeddings / ML features → ai-engineering -->
+- seo: no        <!-- public pages that should rank → seo -->
+
+## Risks & unknowns
+Questions that could change the plan. Each gets a prototype before architecture (`product:prototype`).
+- [ ] K1 · <question that could sink or reshape the project> · prototype: <slug>
+
 ## Open questions
 | Question | Owner | Blocks |
 |---|---|---|

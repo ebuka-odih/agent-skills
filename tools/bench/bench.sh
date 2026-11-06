@@ -6,6 +6,7 @@
 #                                                               scaffold a case from a commit you shipped
 #   bench.sh run  [--cases dir] [--case glob] [--runs N] [--arms with,without] [--out dir]
 #   bench.sh score <case-dir> <workdir> [--reference-diff file] score a finished workdir (used by run)
+#   bench.sh rescore <results-dir> [--cases dir]                re-grade finished runs (no new agent sessions)
 #
 # A case is <cases>/<name>/case.json:
 #   { "repo": "/abs/path", "base": "<commit before the fix>", "fix": "<the commit you shipped>",
@@ -34,8 +35,8 @@ score() {
   [ -f "$case" ] || die "no case.json in $cdir"
   local n i results="[]" type w pass detail label
   n=$(jq '.checks | length' "$case")
-  # the agent's own changes, captured before hidden tests are copied in
-  (cd "$wd" && git add -A >/dev/null 2>&1 && git diff --cached "$(jq -r '.base' "$case")" -- . ':(exclude).bench-*') > "$wd/.bench-agent.diff" 2>/dev/null
+  # the agent's own changes, captured once, before hidden tests are copied in (kept for rescore)
+  [ -f "$wd/.bench-agent.diff" ] || (cd "$wd" && git add -A >/dev/null 2>&1 && git diff --cached "$(jq -r '.base' "$case")" -- . ':(exclude).bench-*') > "$wd/.bench-agent.diff" 2>/dev/null
   for ((i = 0; i < n; i++)); do
     type=$(jq -r ".checks[$i].type" "$case"); w=$(jq -r ".checks[$i].weight // 1" "$case")
     pass=false; detail=""
@@ -72,10 +73,13 @@ $(jq -r ".checks[$i].rubric" "$case")
 AGENT'S CHANGES (git diff against the starting commit, truncated):
 $(head -c 60000 "$wd/.bench-agent.diff")
 $( [ -n "$refdiff" ] && [ -f "$refdiff" ] && printf '\nWHAT THE DEVELOPER ACTUALLY SHIPPED (reference, truncated; other correct solutions are fine):\n%s\n' "$(head -c 30000 "$refdiff")")"
-        verdict=$(printf '%s' "$prompt" | $JUDGE_CMD -p --model "$JUDGE_MODEL" --output-format json --max-turns 1 2>/dev/null | jq -r '.result // empty' 2>/dev/null)
+        # isolated: empty cwd, no user settings/plugins/hooks (a Stop hook in the caller's repo would eat the only turn)
+        local jdir; jdir=$(mktemp -d)
+        verdict=$(cd "$jdir" && printf '%s' "$prompt" | $JUDGE_CMD -p --model "$JUDGE_MODEL" --output-format json --max-turns 1 --setting-sources project,local 2>/dev/null | jq -r '.result // empty' 2>/dev/null)
+        rmdir "$jdir" 2>/dev/null
         verdict=$(printf '%s' "$verdict" | perl -0777 -ne 'print $1 if /(\{.*\})/s')
         if [ "$(printf '%s' "$verdict" | jq -r '.pass // false' 2>/dev/null)" = true ]; then pass=true; fi
-        detail=$(printf '%s' "$verdict" | jq -r '.reason // "judge gave no verdict"' 2>/dev/null || echo "judge gave no verdict") ;;
+        detail=$(printf '%s' "$verdict" | jq -r '.reason // empty' 2>/dev/null); [ -n "$detail" ] || detail="judge gave no verdict" ;;
       *) label="unknown check type '$type'"; detail="skipped" ;;
     esac
     results=$(jq -c --arg t "$type" --arg l "$label" --argjson w "$w" --argjson p "$pass" --arg d "$detail" '. + [{type:$t,label:$l,weight:$w,pass:$p,detail:$d}]' <<<"$results")
@@ -138,7 +142,7 @@ run() {
           --argjson files "$files" --argjson lines "$lines" --argjson s "$s" \
           '{case:$case, arm:$arm, run:$run, duration_s:$dur, files_changed:$files, lines_changed:$lines} + $meta + $s' >> "$out/runs.jsonl"
         [ "$(jq -r .graded <<<"$s")" = false ] && { echo "  not graded — agent error: $(jq -r '.error' <<<"$meta" | cut -c1-120)"; continue; }
-        echo "  score $(jq -r '.ratio' <<<"$s") ($(jq -r '"\(.passed)/\(.total)"' <<<"$s") checks) · $(jq -r '.turns // "?"' <<<"$meta") turns · \$$(jq -r '.cost // "?"' <<<"$meta") · ${dur}s"
+        echo "  score $(jq -r '.ratio' <<<"$s") ($(jq -r '"\(.passed)/\(.total)"' <<<"$s") checks) · $(jq -r '.turns // "?"' <<<"$meta") turns · \$$(jq -r 'if .cost then (.cost * 100 | round / 100) else "?" end' <<<"$meta") · ${dur}s"
       done
     done
   done
@@ -151,6 +155,25 @@ timeout_run() { # seconds cmd… — portable timeout (macOS has no `timeout` by
   "$@" & local pid=$!
   ( sleep "$secs"; kill "$pid" 2>/dev/null ) & local w=$!
   wait "$pid"; local rc=$?; kill "$w" 2>/dev/null; wait "$w" 2>/dev/null; return $rc
+}
+
+# ---------------------------------------------------------------- rescore <out-dir> [--cases dir]
+# Re-grade finished runs (after fixing a rubric or the judge) without paying for the agent again.
+rescore() {
+  local out="${1:-}"; shift || true; local cases="$ROOT/bench-cases"
+  while [ $# -gt 0 ]; do case "$1" in --cases) cases="$2"; shift ;; *) die "unknown option $1" ;; esac; shift; done
+  [ -s "$out/runs.jsonl" ] || die "no runs.jsonl in $out"
+  local tmp="$out/runs.rescored.jsonl"; : > "$tmp"
+  while IFS= read -r row; do
+    local name arm r wd s; name=$(jq -r .case <<<"$row"); arm=$(jq -r .arm <<<"$row"); r=$(jq -r .run <<<"$row")
+    wd="$out/work/$name/$arm-$r"
+    if [ "$(jq -r '.graded' <<<"$row")" = false ] || [ ! -d "$wd" ] || [ ! -f "$cases/$name/case.json" ]; then echo "$row" >> "$tmp"; continue; fi
+    s=$(score "$cases/$name" "$wd" --reference-diff "$out/$name.reference.diff" | jq -c '. + {graded: true}')
+    jq -c --argjson s "$s" '. + $s' <<<"$row" >> "$tmp"
+    echo "rescored $name [$arm $r]: $(jq -r .ratio <<<"$s")"
+  done < "$out/runs.jsonl"
+  mv "$tmp" "$out/runs.jsonl"
+  report "$out"
 }
 
 # ---------------------------------------------------------------- report <out-dir>
@@ -232,7 +255,8 @@ case "$cmd" in
   run) run "$@" ;;
   score) [ $# -ge 2 ] || die "usage: bench.sh score <case-dir> <workdir> [--reference-diff file]"; score "$@" ;;
   report) [ -n "${1:-}" ] || die "usage: bench.sh report <results-dir>"; report "$1" ;;
+  rescore) rescore "$@" ;;
   new) new "$@" ;;
   mine) mine "$@" ;;
-  *) sed -n '2,24p' "$0" | sed 's/^# \{0,1\}//'; exit 2 ;;
+  *) sed -n '2,25p' "$0" | sed 's/^# \{0,1\}//'; exit 2 ;;
 esac

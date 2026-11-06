@@ -35,3 +35,7 @@ code-standards:testing  unit + feature/integration tests — the base layer for 
 - Every extra technique names the condition that justifies it. No condition → don't add it.
 - Never run mutation, load or full E2E suites on every commit; scope them (see budget).
 - Thresholds are set on *changed* code, not the whole legacy codebase.
+
+## Hand-off (project loop)
+Skills share work through files, not memory. When this skill's output is written, log it and let the loop pick the next step:
+`bash <product plugin>/scripts/loop.sh log build "test plan"` then `loop.sh next` (skill `product:project-loop`). If an input file this skill needs is missing, name it and the skill that writes it instead of guessing.

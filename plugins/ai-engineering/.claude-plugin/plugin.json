@@ -1,10 +1,19 @@
 {
   "name": "ai-engineering",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Design and run AI features: discovery questions, AI.md architecture, per-feature cards, Laravel AI SDK / FastAPI + Pydantic AI / other stacks, evals, safety, ops — with a learning loop that turns project lessons into house defaults.",
   "author": {
     "name": "ebuka-odih"
   },
   "license": "MIT",
-  "keywords": ["ai", "llm", "rag", "agents", "evals", "pydantic-ai", "laravel-ai-sdk", "fastapi"]
+  "keywords": [
+    "ai",
+    "llm",
+    "rag",
+    "agents",
+    "evals",
+    "pydantic-ai",
+    "laravel-ai-sdk",
+    "fastapi"
+  ]
 }

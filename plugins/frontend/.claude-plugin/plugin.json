@@ -1,7 +1,7 @@
 {
   "name": "frontend",
-  "version": "0.1.1",
-  "description": "Consistent shadcn + Tailwind dashboards: token-based UI system (docs/ui/UI.md), component layers, dashboard patterns (tables, charts, forms, URL state, data states), consistency reviews, component/visual/a11y testing and performance budgets \u2014 with a hook that flags values bypassing the design tokens.",
+  "version": "0.1.2",
+  "description": "Consistent shadcn + Tailwind dashboards: token-based UI system (docs/ui/UI.md), component layers, dashboard patterns (tables, charts, forms, URL state, data states), consistency reviews, component/visual/a11y testing and performance budgets — with a hook that flags values bypassing the design tokens.",
   "author": {
     "name": "ebuka-odih"
   },

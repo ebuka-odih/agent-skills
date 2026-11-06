@@ -1,7 +1,7 @@
 {
   "name": "security",
-  "version": "0.1.1",
-  "description": "Security baseline per project (SECURITY.md), secure-coding rules for Laravel/FastAPI/React, STRIDE threat models, secrets and dependency hygiene, and full audits via Cloudflare's security-audit skill \u2014 with a hook that blocks secrets being written into code.",
+  "version": "0.1.2",
+  "description": "Security baseline per project (SECURITY.md), secure-coding rules for Laravel/FastAPI/React, STRIDE threat models, secrets and dependency hygiene, and full audits via Cloudflare's security-audit skill — with a hook that blocks secrets being written into code.",
   "author": {
     "name": "ebuka-odih"
   },

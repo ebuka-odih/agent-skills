@@ -65,7 +65,7 @@ flowchart LR
 
 | Plugin | Status | Skills |
 |---|---|---|
-| `product` | ✅ 0.1 | `product` (orchestrator) · `product-spec` · `project-plan` · `next-task` + session-start hook |
+| `product` | ✅ 0.2 | `project-loop` (conductor) · `product` · `product-spec` · `prototype` · `project-plan` · `next-task` + `loop.sh` + session-start hook |
 | `agent-ops` | ✅ 0.1 | `agent-ops` (orchestrator) · `goal-contract` · `verify-done` · `session-report` + logging and done-gate hooks |
 | `ai-engineering` | ✅ 0.1 | `ai-design` (orchestrator) · `ai-feature` · `ai-stack` · `ai-evals` · `ai-safety` · `ai-ops` · `ai-learnings` + session-start drift hook |
 | `architecture` | ✅ 0.2 | `system-design` (orchestrator) · `repo-and-services` · `auth-design` · `data-design` · `api-design` · `adr` |
@@ -85,6 +85,23 @@ flowchart LR
 4. Later, in **Check** mode, reviews a PR against the doc and flags boundary violations with file:line.
 
 House defaults live in [`plugins/architecture/skills/system-design/references/defaults.md`](plugins/architecture/skills/system-design/references/defaults.md). Edit that file to change what gets recommended.
+
+## The project loop — every skill as one system
+
+Skills don't call each other directly. They share work through **contract files** (SPEC, ARCHITECTURE, UI/AI/SEO/SECURITY/DELIVERY docs, PLAN, GOAL, LOOP), and `loop.sh` reads those files to say which skill comes next. That makes any session, or any agent, able to pick the project up.
+
+```
+FOUNDATION  SPEC (profile, risks) → prototype → ARCHITECTURE → UI · AI · SEO · SECURITY · DELIVERY → PLAN
+BUILD LOOP  next-task → GOAL → code (domain skills) → tests → review → PR → verify-done → tick PLAN
+RELEASE     release-and-rollback · site-audit · page-speed      OPERATE  observability · search-console · ai-learnings
+EVOLVE      new feature / bug / signal → SPEC change → (prototype) → PLAN → build loop
+ADOPT       existing code → recover SPEC + ARCHITECTURE → BASELINE from every scanner → evolve
+```
+
+- **`bash plugins/product/scripts/loop.sh status`** shows the mode (greenfield/existing), the phase, which contract files exist, and the **next skill with the reason**. The session-start hook adds the same line to every session.
+- **Only what the project needs.** `## Profile` in SPEC.md (`ui / ai / seo: yes|no`) decides routing. Without a profile, the loop detects from code: frontend deps, LLM SDKs, LLM API hosts or keys, sitemap/robots files. A profile that contradicts the code is flagged as a mismatch. `loop.sh plugins` writes project settings that switch off unneeded plugins, so their skill descriptions stop costing context.
+- **`prototype`** answers a risky question before you commit to the full build. It builds on Matt Pocock's logic/UI prototypes and adds tech, data and AI spikes. Success and kill criteria and a timebox are written first, and the verdict updates SPEC and ADRs.
+- **Every domain orchestrator** ends with a hand-off: `loop.sh log <phase> …`, then `loop.sh next`.
 
 ## What `product` does — long projects, one task at a time
 
@@ -224,7 +241,7 @@ Three layers. The first two must pass before bumping a version; the third measur
 
 | Layer | What it proves | Run |
 |---|---|---|
-| Script tests (512 checks) | Hooks log correctly, redact secrets, gate blocks/releases; plan parsing, ready logic, traceability | `bash plugins/agent-ops/tests/run.sh` · `bash plugins/product/tests/run.sh` · `bash plugins/ai-engineering/tests/run.sh` · `bash plugins/collaboration/tests/run.sh` · `bash plugins/code-standards/tests/run.sh` · `bash plugins/security/tests/run.sh` · `bash plugins/testing/tests/run.sh` · `bash plugins/seo/tests/run.sh` |
+| Script tests (573 checks) | Hooks log correctly, redact secrets, gate blocks/releases; plan parsing, ready logic, traceability | `bash plugins/agent-ops/tests/run.sh` · `bash plugins/product/tests/run.sh` · `bash plugins/ai-engineering/tests/run.sh` · `bash plugins/collaboration/tests/run.sh` · `bash plugins/code-standards/tests/run.sh` · `bash plugins/security/tests/run.sh` · `bash plugins/testing/tests/run.sh` · `bash plugins/seo/tests/run.sh` |
 | Skill evals | A real agent with the plugin does what SKILL.md promises, compared with the same agent without it | `cd plugins/<domain> && claude plugin eval . --allow-tools Write Edit Bash --no-publish` |
 | Project benchmark | On tasks you already shipped, replayed from the commit before the fix, the agent *with* the plugins beats the same agent *without* them. Scored by the hidden tests from your real fix, plus an LLM judge that sees your shipped diff | `tools/bench/bench.sh run` — see [tools/bench/README.md](tools/bench/README.md). Cases and results are private (gitignored) |
 

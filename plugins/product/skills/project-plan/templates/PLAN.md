@@ -7,6 +7,7 @@ updated: YYYY-MM-DD
 
 Source: docs/spec/SPEC.md · Architecture: docs/architecture/ARCHITECTURE.md
 
+<!-- milestone status: planned → active → done → released (loop.sh reads these) -->
 ## M0 — Foundations · status: active
 goal: Code runs locally, CI passes, deploys to staging.
 demo: staging URL serves the app; CI green on main.

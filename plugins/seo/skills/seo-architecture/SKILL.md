@@ -40,3 +40,7 @@ House defaults: [references/defaults.md](references/defaults.md).
 - Every indexable page has a self-referencing absolute canonical, a unique title and description, and one h1.
 - `robots.txt` controls crawling, not indexing — use `noindex` (meta or header) to keep pages out of results, and don't also block them in robots.txt (the crawler must see the noindex).
 - Don't generate pages you wouldn't show a user: thin or duplicate pages hurt the whole site.
+
+## Hand-off (project loop)
+Skills share work through files, not memory. When this skill's output is written, log it and let the loop pick the next step:
+`bash <product plugin>/scripts/loop.sh log foundation/design "SEO.md"` then `loop.sh next` (skill `product:project-loop`). If an input file this skill needs is missing, name it and the skill that writes it instead of guessing.

@@ -40,3 +40,7 @@ House defaults: [references/defaults.md](references/defaults.md).
 - Defensive work only: never test against production, third-party systems or other people's data. See `security-audit` for sandbox rules.
 - A found secret is a **rotation**, not just a deletion — git history keeps it.
 - Severity uses impact × likelihood (critical / high / medium / low); don't inflate.
+
+## Hand-off (project loop)
+Skills share work through files, not memory. When this skill's output is written, log it and let the loop pick the next step:
+`bash <product plugin>/scripts/loop.sh log foundation/design "SECURITY.md"` then `loop.sh next` (skill `product:project-loop`). If an input file this skill needs is missing, name it and the skill that writes it instead of guessing.

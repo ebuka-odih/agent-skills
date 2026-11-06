@@ -27,3 +27,6 @@ Follow [references/incident.md](references/incident.md). Order: **stop the bleed
 - Rolling back code must not require rolling back the schema (that's what expand/contract buys you).
 - Production data is never deleted to make a migration pass; take a backup first and fix forward.
 - Deploys need the user's go-ahead; agents prepare, humans approve.
+
+## Hand-off (project loop)
+After a milestone ships and smoke checks pass, set its line in `docs/plan/PLAN.md` to `status: released` and log it: `bash <product plugin>/scripts/loop.sh log release "M<n> released · next: operate/evolve"`. The loop then moves the project to operate/evolve.

@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.5.0 — 2026-11-06
+- **Project loop** (`product` 0.2.0): `project-loop` skill (foundation → build loop → release → operate → evolve, plus adopt for existing codebases; phases with exit gates, the contract of who writes and reads each file, evolve rules for features, bugs, signals and scaling). `loop.sh status|next|json|plugins|log` derives the phase from the contract files and names the next skill with the reason; the session-start hook includes it.
+- **Profile-based routing**: `## Profile` in SPEC (ui/ai/seo) decides which domains are used. Without one, detection uses code evidence (frontend deps, LLM SDKs, LLM API hosts or keys, sitemap/robots), ignoring tests, fixtures and docs, plus spec words. Mismatches (profile "no", code "yes") are flagged. `loop.sh plugins` writes project settings that disable unneeded plugins.
+- **`prototype` skill**: builds on mattpocock/skills `prototype` (logic + UI, delegated when installed) and adds tech, data, AI and flow spikes, success/kill criteria and a timebox before building, and verdicts wired into SPEC risks (K…), the change log, ADRs and the loop. SPEC template gains `## Profile` and `## Risks & unknowns`.
+- Hand-off lines in 13 orchestrators plus release-and-rollback (milestone `status: released`). Patch bumps: architecture, frontend, ai-engineering, seo, security, devops, testing, collaboration, code-standards, agent-ops.
+- Tests: product 29 → 80; loop.sh mutation 6/6. Evals: `prototype-before-build`, `loop-routes-by-profile` (not yet run).
+- Bench harness: the LLM judge runs isolated (empty cwd, no user settings). Before this fix, a Stop hook in the caller's repo used its only turn and every judge check failed silently. `bench.sh rescore` re-grades finished runs without new agent sessions; the agent diff is kept for rescoring. 63 harness tests.
+- **First real benchmark** (project 1, nearby-distance formatting): with plugins 1.0 in 202 s / $0.43 / 17 turns; without 1.0 in 728 s / $0.53. Same quality, 3.6× faster, 18% cheaper. The case is easy (the task names the interface); harder cases follow.
+- Benchmarks: public greenfield case generator `tools/bench/examples/greenfield-bookings.sh` (brief → deployable API; hidden acceptance tests incl. concurrent double-booking).
+
 ## 1.4.0 — 2026-11-06
 - Project benchmark harness `tools/bench/bench.sh`: `mine` (candidate fix commits, ★ when tests changed), `new` (case from a shipped commit: base = parent, hidden tests = changed test files), `run` (isolated clone without a remote, with/without arms via `--plugin-dir` and `--setting-sources project,local`, N runs), `score` (hidden tests applied after the agent, cmd, grep present/absent, LLM judge with the shipped diff as reference), and a report of score, checks, turns, cost, time, files and Δ. Runs where the agent errored (usage limit, crash) are marked not graded and left out of averages.
 - 53 harness tests with a fake agent and judge (proves the agent never sees hidden tests, the source repo is untouched, and arms differ only by plugins); mutation 6/6.
