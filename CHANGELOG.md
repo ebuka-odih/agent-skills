@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.9.0 — 2026-11-06
+- **Fast path for small changes.** "Small" means a fix or tweak whose expected behaviour the request already states, touching at most ~3 source files, with no schema, public API, auth, money/messages, dependency or deploy change. A small change gets one test, the smallest change in the existing pattern, the module's tests, and a final note with evidence. It needs no GOAL.md, no strategy, and no new docs or helpers. Added because the first benchmarks showed +35% cost with no quality gain on small fixes. The plugins wrote extra helper modules, test files and an unrequested docs update.
+  - `goal-nudge` hook sizes the request first: agent-ops 0.1.4.
+  - `goal-contract` gains a "Size first" gate.
+  - `writing-code` gains a "Fast path" section: code-standards 0.1.6.
+  - `test-strategy` says small changes need just one regression test: testing 0.1.3.
+  - The loop's phases gain B0: product 0.2.2.
+  - Eval `fast-path-small-fix`.
+- Bench harness: agents run with `--output-format stream-json`. Each run records the skills it loaded and its tool-call counts, and the report lists them per run, so overhead can be traced to a skill. 69 harness tests.
+
 ## 1.8.0 — 2026-11-06
 - `devops` 0.2.0: new `uptime` skill and `uptime-scan.sh` (fail-correctly, health checks, monitoring references).
   - Static rules: U1 (upstream 5xx served as 200 via `error_page … = @fallback` or `=200`), U2 (SPA fallback soft 404s), U3 (no health endpoint), U4 (no container healthcheck), U5 (compose without a restart policy), U6 (uvicorn/gunicorn without a graceful timeout).

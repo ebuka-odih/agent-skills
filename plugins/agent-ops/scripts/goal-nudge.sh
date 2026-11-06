@@ -21,7 +21,7 @@ if [ "$status" = "active" ]; then
   ids=$(ao_goal_open_ids "$logdir")
   msg="agent-ops: .agent-log/GOAL.md is active (open criteria: ${ids:-none}). If this message changes the goal, update GOAL.md (log it under Changes) or archive it and write a new one with the goal-contract skill. Before your final message, run the verify-done skill."
 else
-  msg="agent-ops: If this request needs file edits or more than one step, FIRST load the goal-contract skill and write .agent-log/GOAL.md (the request verbatim + checkable acceptance criteria) before any other edit. Before your final message, load the verify-done skill and prove each criterion with fresh evidence. Skip both only for pure questions or a single read-only command."
+  msg="agent-ops: Size the request first. SMALL = a fix or tweak whose expected behaviour the request already states, touching <= ~3 source files, with no schema/migration, public API, auth, money/messages, dependency or deploy change. SMALL -> fast path: no GOAL.md; reproduce or pin the behaviour with one test, make the smallest change in the existing pattern, run that module's tests, and end with what changed + the command you ran and its result. Anything else (or a small task that grows) -> FIRST load the goal-contract skill and write .agent-log/GOAL.md before other edits, and run verify-done before your final message. Pure questions and read-only commands need neither."
 fi
 
 jq -nc --arg m "$msg" '{hookSpecificOutput:{hookEventName:"UserPromptSubmit", additionalContext:$m}}'

@@ -257,6 +257,7 @@ flowchart LR
 
 - **Logs everything** via hooks: prompts, every tool call (ok/failed, output excerpt, secrets redacted), final claims, gate blocks. One JSONL file per session in `.agent-log/sessions/` (gitignored by default).
 - **Goal contract**: before work, the request is written down verbatim with checkable acceptance criteria.
+- **Size first**: small, clearly specified fixes (at most ~3 files, no schema, API, auth or money change) take a fast path: one test, the smallest change, evidence in the final message, and no GOAL.md. Everything else gets the goal contract.
 - **Done-gate**: a Stop hook refuses to let the agent end its turn while criteria are unverified. It blocks once per attempt, so it can't loop. `AGENT_OPS_GATE=off` disables it.
 - **Session report**: `bash plugins/agent-ops/scripts/report.sh .agent-log/sessions/<file>.jsonl` lists failures, files touched, and gap signals like "claims tests pass but none ran after the last edit".
 
@@ -288,7 +289,7 @@ Three layers. The first two must pass before bumping a version; the third measur
 
 | Layer | What it proves | Run |
 |---|---|---|
-| Script tests (692 checks) | Hooks log correctly, redact secrets, gate blocks/releases; plan parsing, ready logic, traceability | `bash plugins/agent-ops/tests/run.sh` · `bash plugins/product/tests/run.sh` · `bash plugins/ai-engineering/tests/run.sh` · `bash plugins/collaboration/tests/run.sh` · `bash plugins/code-standards/tests/run.sh` · `bash plugins/security/tests/run.sh` · `bash plugins/testing/tests/run.sh` · `bash plugins/seo/tests/run.sh` |
+| Script tests (698 checks) | Hooks log correctly, redact secrets, gate blocks/releases; plan parsing, ready logic, traceability | `bash plugins/agent-ops/tests/run.sh` · `bash plugins/product/tests/run.sh` · `bash plugins/ai-engineering/tests/run.sh` · `bash plugins/collaboration/tests/run.sh` · `bash plugins/code-standards/tests/run.sh` · `bash plugins/security/tests/run.sh` · `bash plugins/testing/tests/run.sh` · `bash plugins/seo/tests/run.sh` |
 | Skill evals | A real agent with the plugin does what SKILL.md promises, compared with the same agent without it | `cd plugins/<domain> && claude plugin eval . --allow-tools Write Edit Bash --no-publish` |
 | Project benchmark | On tasks you already shipped, replayed from the commit before the fix, the agent *with* the plugins beats the same agent *without* them. Scored by the hidden tests from your real fix, plus an LLM judge that sees your shipped diff | `tools/bench/bench.sh run` — see [tools/bench/README.md](tools/bench/README.md). Cases and results are private (gitignored) |
 

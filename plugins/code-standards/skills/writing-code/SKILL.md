@@ -18,6 +18,9 @@ code-standards/skills/
 
 House defaults: [references/defaults.md](references/defaults.md). Stack guides: [Laravel](references/laravel.md) · [FastAPI](references/fastapi.md) · [TypeScript/React](references/typescript-react.md).
 
+## Fast path (small changes)
+**small** = a fix or tweak whose expected behaviour the request already states, touching ≤ ~3 source files, with no schema/migration, public API contract, auth/permission, money/message, dependency or deploy change. For those, do only: (1) a failing test that reproduces the bug or pins the new behaviour, (2) the smallest change in the existing pattern of that file, (3) the module's tests + linter, (4) a final note with what changed and the command output. Skip the rest of the loop — no new docs, helpers or refactors that the request didn't ask for (note them as follow-ups instead). Everything else follows the loop below.
+
 ## The loop
 1. **Read the rules first** (only what exists):
    - `docs/plan/PLAN.md` task + its `covers:` requirements in `docs/spec/SPEC.md` → what "done" means

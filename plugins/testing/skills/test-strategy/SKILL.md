@@ -18,6 +18,8 @@ testing/skills/
 code-standards:testing  unit + feature/integration tests — the base layer for every change
 ```
 
+Small changes (one fix or tweak, ≤ ~3 files, no schema/API/auth/money change) don't need a strategy: one regression test that fails before and passes after is the whole job.
+
 ## Steps
 1. **Get the conditions** — run the planner on the change:
    ```bash

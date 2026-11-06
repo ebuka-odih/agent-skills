@@ -28,7 +28,11 @@ cat > "$TMP/fake-claude" <<'F'
 printf '%s\n' "$*" >> "$FAKE_LOG"
 ls tests >> "$FAKE_LOG.seen" 2>&1 || echo "no tests dir" >> "$FAKE_LOG.seen"
 git remote >> "$FAKE_LOG.remotes"
-case "$*" in *--plugin-dir*) printf '#!/usr/bin/env bash\necho $(( $1 + $2 ))\n' > add.sh; echo '{"num_turns":4,"total_cost_usd":0.12,"is_error":false,"result":"fixed"}' ;;
+case "$*" in *--plugin-dir*) printf '#!/usr/bin/env bash\necho $(( $1 + $2 ))\n' > add.sh
+    echo '{"type":"system","subtype":"init"}'
+    echo '{"type":"assistant","message":{"content":[{"type":"tool_use","name":"Skill","input":{"skill":"code-standards:writing-code"}},{"type":"tool_use","name":"Read","input":{}}]}}'
+    echo '{"type":"assistant","message":{"content":[{"type":"text","text":"x"},{"type":"tool_use","name":"Edit","input":{}},{"type":"tool_use","name":"Read","input":{}}]}}'
+    echo '{"type":"result","num_turns":4,"total_cost_usd":0.12,"is_error":false,"result":"fixed"}' ;;
   *"FAIL_AGENT"*) echo '{"num_turns":1,"total_cost_usd":0.01,"is_error":true,"result":"boom"}' ;;
   *) echo '{"num_turns":9,"total_cost_usd":0.30,"is_error":false,"result":"looked around"}' ;; esac
 F
@@ -63,6 +67,10 @@ check "hidden tests pass only with the fix"   '[ "$(w ".checks[0].pass")" = true
 check "grep present / absent"                 '[ "$(w ".checks[1].pass")" = true ] && [ "$(w ".checks[2].pass")" = true ] && [ "$(o ".checks[2].pass")" = false ]'
 check "llm judge verdict parsed"              '[ "$(w ".checks[4].pass")" = true ] && [ "$(w ".checks[4].detail")" = adds ] && [ "$(o ".checks[4].detail")" = "still subtracts" ]'
 check "unknown check type never passes"       '[ "$(w ".checks[5].pass")" = false ] && [ "$(w ".checks[5].detail")" = skipped ]'
+check "stream-json: skills recorded"         '[ "$(w ".skills | join(\",\")")" = "code-standards:writing-code" ] && [ "$(o ".skills | length")" = 0 ]'
+check "stream-json: tool counts recorded"     '[ "$(w ".tools.Read")" = 2 ] && [ "$(w ".tools.Edit")" = 1 ] && [ "$(w ".tools.Skill")" = 1 ]'
+check "report lists skills and tools"         'grep -q "add-fix \[with 1\]: skills: code-standards:writing-code · tools: Read 2" "$TMP/res/report.md" && grep -q "add-fix \[without 1\]: skills: none" "$TMP/res/report.md"'
+check "agent asked for a stream-json trace"   'grep -q -- "--output-format stream-json --verbose" "$FAKE_LOG"'
 check "turns and cost recorded"               '[ "$(w .turns)" = 4 ] && [ "$(w .cost)" = 0.12 ] && [ "$(o .turns)" = 9 ]'
 check "files changed counted"                 '[ "$(w .files_changed)" = 1 ] && [ "$(o .files_changed)" = 0 ]'
 check "with arm loads the case plugins"       'grep -- "--plugin-dir $TMP/plugins/seo" "$FAKE_LOG" | grep -q "add.sh gives"'

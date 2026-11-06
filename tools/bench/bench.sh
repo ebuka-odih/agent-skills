@@ -134,10 +134,10 @@ run() {
         echo "▶ $name [$arm $r/$runs]"
         t0=$(date +%s)
         (cd "$wd" && timeout_run "$(jq -r '.timeout // 1800' "$case")" $CLAUDE_CMD -p "$(jq -r '.task' "$case")" "${flags[@]}" \
-            --output-format json --max-turns "$(jq -r '.max_turns // 60' "$case")" \
+            --output-format stream-json --verbose --max-turns "$(jq -r '.max_turns // 60' "$case")" \
             --permission-mode acceptEdits --allowedTools "Bash Read Edit Write Glob Grep Skill") > "$wd/.bench-agent.json" 2> "$wd/.bench-agent.err"
         dur=$(( $(date +%s) - t0 ))
-        meta=$(jq -c '{turns: (.num_turns // null), cost: (.total_cost_usd // null), error: (if .is_error then (.result // "error") else null end)}' "$wd/.bench-agent.json" 2>/dev/null || echo '{"turns":null,"cost":null,"error":"no JSON from agent"}')
+        meta=$(agent_meta "$wd/.bench-agent.json")
         local files lines; files=$(cd "$wd" && git add -A >/dev/null 2>&1; git diff --cached --name-only "$base" -- . ':(exclude).bench-*' | grep -c .)
         lines=$(cd "$wd" && git diff --cached --numstat "$base" -- . ':(exclude).bench-*' | awk '{a+=$1; d+=$2} END {print a+d+0}')
         local s
@@ -156,6 +156,20 @@ run() {
     done
   done
   report "$out"
+}
+
+# agent_meta <file> — turns/cost/error from the agent output (stream-json trace or one JSON object) plus what it used:
+# tools {name: count} and skills [names] — the evidence for "where did the time go".
+agent_meta() {
+  local f="$1" res
+  res=$(jq -c 'select(type == "object" and .type == "result")' "$f" 2>/dev/null | tail -1)
+  [ -n "$res" ] || res=$(jq -c 'select(type == "object" and (has("num_turns") or has("is_error")))' "$f" 2>/dev/null | tail -1)
+  [ -n "$res" ] || { echo '{"turns":null,"cost":null,"error":"no JSON from agent","tools":{},"skills":[]}'; return; }
+  jq -c --slurpfile all <(jq -c 'select(type == "object")' "$f" 2>/dev/null) '
+    ([$all[] | select(.type == "assistant") | .message.content[]? | select(.type == "tool_use")]) as $uses
+    | {turns: (.num_turns // null), cost: (.total_cost_usd // null), error: (if .is_error then (.result // "error") else null end),
+       tools: ($uses | group_by(.name) | map({key: .[0].name, value: length}) | from_entries),
+       skills: ($uses | map(select(.name == "Skill") | .input.skill // .input.name // "?") | unique)}' <<<"$res"
 }
 
 timeout_run() { # seconds cmd… — portable timeout (macOS has no `timeout` by default)
@@ -213,6 +227,9 @@ report() {
     echo "| Case | Δ score (with − without) |"
     echo "|---|---|"
     jq -r '.[] | "| \(.case) | \(if .delta == null then "–" elif .delta > 0 then "+\(.delta)" else "\(.delta)" end) |"' "$out/results.json"
+    echo
+    echo "Skills and tools used (per run):"
+    jq -r '"- \(.case) [\(.arm) \(.run)]: skills: \((.skills // []) | if length == 0 then "none" else join(", ") end) · tools: \((.tools // {}) | to_entries | sort_by(-.value) | map("\(.key) \(.value)") | join(", "))"' "$out/runs.jsonl"
     echo
     echo "Failed checks:"
     jq -r 'if .graded == false then "- \(.case) [\(.arm) \(.run)]: not graded — \(.error | tostring | .[0:100])" else "- \(.case) [\(.arm) \(.run)]: " + ([.checks[] | select(.pass | not) | .label] | join("; ")) end' "$out/runs.jsonl" | grep -v ': $' || echo "- none"
