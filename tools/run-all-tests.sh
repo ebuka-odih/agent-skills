@@ -21,7 +21,7 @@ else
 fi
 
 step "plugin script tests"
-for t in plugins/*/tests/run.sh; do
+for t in plugins/*/tests/run.sh tools/bench/tests/run.sh; do
   name=$(basename "$(dirname "$(dirname "$t")")")
   full=$(bash "$t" 2>&1); res=$(printf '%s\n' "$full" | tail -1)
   case "$res" in *" 0 failed") echo "ok  $name: $res" ;; *) echo "FAIL $name: $res"; printf '%s\n' "$full" | grep -A1 '✘'; failed+=("tests $name") ;; esac
@@ -47,6 +47,7 @@ plugins/seo/scripts/seo-scan.sh|bash plugins/seo/tests/run.sh
 plugins/seo/scripts/seo-crawl.sh|bash plugins/seo/tests/run.sh
 plugins/seo/scripts/gsc-report.sh|bash plugins/seo/tests/run.sh
 plugins/seo/scripts/page-speed.sh|bash plugins/seo/tests/run.sh
+tools/bench/bench.sh|bash tools/bench/tests/run.sh
 EOF
 fi
 

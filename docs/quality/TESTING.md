@@ -28,7 +28,8 @@ Dogfooding found two planner gaps, fixed before running the rest: guard/gate/hoo
 | testing | 24 |
 | frontend | 51 |
 | seo | 150 |
-| **Total** | **459** |
+| bench harness | 53 |
+| **Total** | **512** |
 
 ## 3. Mutation testing — do the tests catch broken guards?
 No mutation tool supports bash, so `tools/mutate-bash.sh` applies one mutation at a time (neutralise a deny/ask decision, flip a comparison, delete a rule or pattern, negate a condition, disable a redaction rule), runs that plugin's tests, and counts killed vs surviving mutants.
@@ -47,6 +48,7 @@ No mutation tool supports bash, so `tools/mutate-bash.sh` applies one mutation a
 | `seo/seo-crawl.sh` | 13/30 (43%) | 28/30 (93%) — 2 equivalent mutants |
 | `seo/page-speed.sh` | 7/8 (87%) | 8/8 (100%) |
 | `seo/gsc-report.sh` | 2/2 (100%) | 2/2 (100%) |
+| `tools/bench/bench.sh` | 5/6 (83%) | 6/6 (100%) |
 
 \* Both git-guard survivors were a bug in the mutation runner itself (awk `-v` stripped backslashes, changing `\s` to `s`), not test gaps. Fixed by passing the mutant through `ENVIRON`, plus a check that exactly one line differs.
 
@@ -69,6 +71,9 @@ Result: **2,890 runs (seeds 7, 42, 11), 0 violations.** One run flagged `secret-
 
 ## 5. Skill behaviour — evals
 Each plugin has `evals/` cases run with `claude plugin eval`, comparing an agent with the plugin against one without. Results are in the README table. Evals call the model and count against usage limits, so they run locally rather than in CI.
+
+## 6. Project benchmark — real tasks from finished projects
+`tools/bench/bench.sh` replays a shipped fix from its parent commit, with and without the plugins. It scores each run with the fix's own tests (copied in after the agent finishes), plus optional cmd/grep checks and an LLM judge that sees the shipped diff. Cases are private (`bench-cases/`, gitignored). Before a case is used, its hidden tests are checked to **fail at base and pass at the fix**. The first five cases (four from one project, one from another) all met that bar. The harness itself is tested with a fake agent and judge: 53 checks, mutation 6/6.
 
 ## 6. CI
 `.github/workflows/ci.yml`: script tests + fuzzing + repo security self-scan on every push and PR; mutation testing weekly and on demand.

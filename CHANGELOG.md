@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.4.0 — 2026-11-06
+- Project benchmark harness `tools/bench/bench.sh`: `mine` (candidate fix commits, ★ when tests changed), `new` (case from a shipped commit: base = parent, hidden tests = changed test files), `run` (isolated clone without a remote, with/without arms via `--plugin-dir` and `--setting-sources project,local`, N runs), `score` (hidden tests applied after the agent, cmd, grep present/absent, LLM judge with the shipped diff as reference), and a report of score, checks, turns, cost, time, files and Δ. Runs where the agent errored (usage limit, crash) are marked not graded and left out of averages.
+- 53 harness tests with a fake agent and judge (proves the agent never sees hidden tests, the source repo is untouched, and arms differ only by plugins); mutation 6/6.
+- `bench-cases/` and `bench-results/` are gitignored: cases describe private projects.
+
 ## 1.3.0 — 2026-11-06
 - `seo` 0.2.0: new skills `keyword-research` (intent, clusters → one URL, scoring, cannibalization), `search-console` (striking distance, CTR vs position, traffic-drop diagnosis by shape), `page-speed` (Core Web Vitals field p75 + lab, fixes by savings), `site-audit` (live crawl); SEO glossary; SEO.md template gains keyword map, speed table and changes log.
 - New scripts: `seo-crawl.sh` (host variants, robots.txt groups, sitemap index, status/redirects/X-Robots-Tag/TTFB/client-rendered shells, then seo-scan on the fetched HTML), `gsc-report.sh` (Search Console export: trend, drop start date, striking distance, low CTR, zero-click pages), `page-speed.sh` (PageSpeed Insights API, `--from-json`, `--lighthouse`, `--strict`).
