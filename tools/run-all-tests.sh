@@ -43,6 +43,7 @@ plugins/security/scripts/patterns.sh|bash plugins/security/tests/run.sh
 plugins/agent-ops/scripts/done-gate.sh|bash plugins/agent-ops/tests/run.sh
 plugins/agent-ops/scripts/lib.sh|bash plugins/agent-ops/tests/run.sh
 plugins/frontend/scripts/ui-patterns.sh|bash plugins/frontend/tests/run.sh
+plugins/seo/scripts/seo-scan.sh|bash plugins/seo/tests/run.sh
 EOF
 fi
 

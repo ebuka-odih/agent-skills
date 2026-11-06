@@ -6,7 +6,7 @@
 #   e.g. tools/mutate-bash.sh plugins/devops/scripts/infra-guard.sh "bash plugins/devops/tests/run.sh"
 #
 # Operators (each applied to one line at a time):
-#   decision   deny/ask/block calls → no-op            (does a test notice the guard stopped guarding?)
+#   decision   deny/ask/block calls and `&& issue error|warn` reports → no-op            (does a test notice the guard stopped guarding?)
 #   compare    -gt→-ge  -lt→-le  -eq→-ne  = "true"→= "false"  = 1 ]→= 0 ]
 #   rule       delete a guard rule, pattern-table entry, awk detection rule, or neutralise an exported regex
 #   negate     `grep -q` → `! grep -q` on condition lines
@@ -52,6 +52,7 @@ for n in $(seq 1 "$lines"); do
   mutate_line "$n" 's/(decide|block) (deny|ask)/: \2/' decision
   mutate_line "$n" 's/&& (ask|deny|block) "/\&\& : "/' decision
   mutate_line "$n" 's/^([[:space:]]*)(deny|block) "/\1: "/' decision
+  mutate_line "$n" 's/(&&|\|\|) issue (error|warn) /\1 : /' decision
   # compare
   mutate_line "$n" 's/ -gt / -ge /' compare
   mutate_line "$n" 's/ -lt / -le /' compare

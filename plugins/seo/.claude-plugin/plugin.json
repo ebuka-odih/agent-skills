@@ -1,0 +1,10 @@
+{
+  "name": "seo",
+  "version": "0.1.0",
+  "description": "Technical SEO built into the architecture: rendering choice, URL and indexation policy (docs/seo/SEO.md), on-page head tags, structured data, programmatic pages with indexation thresholds, hreflang — plus seo-scan.sh, a built-site auditor for CI.",
+  "author": {
+    "name": "ebuka-odih"
+  },
+  "license": "MIT",
+  "keywords": ["seo", "structured-data", "json-ld", "sitemap", "hreflang", "programmatic-seo", "meta-tags"]
+}

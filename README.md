@@ -16,6 +16,7 @@ claude plugin install security@ebuka-skills
 claude plugin install testing@ebuka-skills
 claude plugin install devops@ebuka-skills
 claude plugin install frontend@ebuka-skills
+claude plugin install seo@ebuka-skills
 ```
 
 Working on the skills from a local clone? Run `claude plugin marketplace add ./` from the repo root instead.
@@ -72,6 +73,7 @@ flowchart LR
 | `testing` | ✅ 0.1 | `test-strategy` (orchestrator) · `mutation-testing` · `property-based` · `contract-testing` · `e2e-testing` · `non-functional` (load, a11y, visual) |
 | `security` | ✅ 0.1 | `security-baseline` (orchestrator) · `secure-coding` · `threat-model` · `secrets-and-deps` · `security-audit` (→ [Cloudflare's skill](UPSTREAM.md)) + secret guard hook |
 | `frontend` | ✅ 0.1 | `ui-system` (orchestrator) · `shadcn-tailwind` · `dashboard-patterns` · `ui-consistency` · `component-testing` · `frontend-performance` + token hook |
+| `seo` | ✅ 0.1 | `seo-architecture` (orchestrator) · `on-page` · `structured-data` · `programmatic-seo` · `international` + `seo-scan.sh` built-site auditor |
 | `devops` | ✅ 0.1 | `delivery-pipeline` (orchestrator) · `ci` · `environments` · `infrastructure-as-code` · `observability` · `release-and-rollback` + infra guard hook |
 | `collaboration` | ✅ 0.1 | `git-workflow` (orchestrator) · `commits` · `pull-requests` · `code-review` · `repo-setup` + git guard hook |
 
@@ -119,6 +121,17 @@ Consistency comes from **few decisions reused everywhere**, not careful screens:
 - **`frontend-performance`** sets Web Vitals and bundle budgets, fixes waterfalls, lazy-loads heavy libraries, and virtualises big tables.
 - **`ui-scan.sh`** reports theme setup, component layers, drift counts per type with the top files, and missing tooling. On two real dashboards it found 400–1,400 raw colours and arbitrary values each, and no app-component layer.
 - **The token hook** (non-blocking) flags `bg-blue-600`, hex/rgb literals, `p-[13px]` and `style={{…}}` as they're written, and names the token to use. shadcn primitives, stories, tests, `data-[…]` variants and `var()` values are exempt.
+
+## What `seo` does — ranking built into the architecture
+
+Technical SEO only; content and posting belong in a separate growth plugin later.
+
+- **`seo-architecture`** reads SPEC.md and ARCHITECTURE.md, then picks the rendering per page type (prerender/SSR for public pages, never a client-only SPA), the URL scheme, the indexation policy and the sitemaps. It writes `docs/seo/SEO.md`.
+- **`on-page`** covers the head of every page: one title, description, absolute self-canonical, one h1, Open Graph. Includes Blade, React and Next snippets.
+- **`structured-data`** maps page types to schema.org types Google still shows (FAQ and HowTo rich results are gone) and builds JSON-LD from real data, never fake ratings.
+- **`programmatic-seo`** covers generated pages (city × category): one `indexable()` function sets a threshold, and below it the page gets noindex,follow and stays out of the sitemap, so thin pages never get indexed.
+- **`international`** covers locale subfolders, reciprocal hreflang + x-default, and localised currency and dates.
+- **`seo-scan.sh <build-dir> --base https://example.com [--strict]`** audits the built HTML: titles, descriptions, canonicals, h1, lang, OG, JSON-LD validity, hreflang reciprocity, site-wide duplicates, `robots.txt` blocks and sitemap coverage. `--strict` fails CI on errors.
 
 ## What `devops` does — PR to production, reversibly
 
@@ -206,7 +219,7 @@ Two layers. Both must pass before bumping a version.
 
 | Layer | What it proves | Run |
 |---|---|---|
-| Script tests (309 checks) | Hooks log correctly, redact secrets, gate blocks/releases; plan parsing, ready logic, traceability | `bash plugins/agent-ops/tests/run.sh` · `bash plugins/product/tests/run.sh` · `bash plugins/ai-engineering/tests/run.sh` · `bash plugins/collaboration/tests/run.sh` · `bash plugins/code-standards/tests/run.sh` · `bash plugins/security/tests/run.sh` · `bash plugins/testing/tests/run.sh` |
+| Script tests (373 checks) | Hooks log correctly, redact secrets, gate blocks/releases; plan parsing, ready logic, traceability | `bash plugins/agent-ops/tests/run.sh` · `bash plugins/product/tests/run.sh` · `bash plugins/ai-engineering/tests/run.sh` · `bash plugins/collaboration/tests/run.sh` · `bash plugins/code-standards/tests/run.sh` · `bash plugins/security/tests/run.sh` · `bash plugins/testing/tests/run.sh` · `bash plugins/seo/tests/run.sh` |
 | Skill evals | A real agent with the plugin does what SKILL.md promises, compared with the same agent without it | `cd plugins/<domain> && claude plugin eval . --allow-tools Write Edit Bash --no-publish` |
 
 ### Latest results — 2026-11-05 (Claude Opus 5.5)

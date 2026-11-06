@@ -1,0 +1,4 @@
+schema_version: "1.1"
+name: audit-built-site
+context:
+  scaffold_script: fixture.sh
