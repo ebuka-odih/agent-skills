@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.6.0 — 2026-11-06
+- `frontend` 0.2.0: new `browser-checks` skill and `ui-check` runner (`scripts/ui-check/`), built on Playwright + axe.
+  - Runs pages × widths × themes, with media, class, attribute or storage theme strategies.
+  - Checks serious/critical axe violations, sideways scroll (naming the culprit leaf elements), broken images, console errors and same-origin 4xx/5xx.
+  - Writes a JSON + markdown report and screenshots. Exits 1 on failures and 2 on tool errors.
+  - CI template: a PR job against the built app, and a live job after deploy.
+  - 16 node tests with a fake Playwright; eval `browser-checks-setup`.
+  - Real runs on two production sites found a sideways-scrolling category page (project 1) and 2 serious axe violations plus sideways scroll on a pricing page (project 2).
+- Feedback loop: `FEEDBACK.md` plus the repo-local skill `improve-from-feedback`. Project agents report; this repo generalises, tests, ships and hands back.
+
 ## 1.5.0 — 2026-11-06
 - **Project loop** (`product` 0.2.0): `project-loop` skill (foundation → build loop → release → operate → evolve, plus adopt for existing codebases; phases with exit gates, the contract of who writes and reads each file, evolve rules for features, bugs, signals and scaling). `loop.sh status|next|json|plugins|log` derives the phase from the contract files and names the next skill with the reason; the session-start hook includes it.
 - **Profile-based routing**: `## Profile` in SPEC (ui/ai/seo) decides which domains are used. Without one, detection uses code evidence (frontend deps, LLM SDKs, LLM API hosts or keys, sitemap/robots), ignoring tests, fixtures and docs, plus spec words. Mismatches (profile "no", code "yes") are flagged. `loop.sh plugins` writes project settings that disable unneeded plugins.

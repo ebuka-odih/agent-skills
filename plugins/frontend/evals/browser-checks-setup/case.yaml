@@ -1,0 +1,4 @@
+schema_version: "1.1"
+name: browser-checks-setup
+context:
+  scaffold_script: fixture.sh

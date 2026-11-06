@@ -1,0 +1,43 @@
+# Browser checks: axe (serious/critical), sideways scrolling, broken images, console errors — on PRs against the
+# built app, and after each deploy against the live URL. Copy to .github/workflows/ui-check.yml and adjust the
+# marked lines. Needs dev deps: playwright, @axe-core/playwright; config: ui-check.config.json; runner: scripts/ui-check/.
+name: ui-check
+on:
+  pull_request:
+  workflow_run:                                   # after the deploy workflow finishes
+    workflows: ["deploy"]                         # ← your deploy workflow's name
+    types: [completed]
+jobs:
+  preview:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults: { run: { working-directory: web } } # ← where package.json lives
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm, cache-dependency-path: web/package-lock.json }
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - run: npm run build
+      - run: npx vite preview --port 4173 &       # ← your static/preview server
+      - run: for i in $(seq 60); do curl -sf http://localhost:4173 >/dev/null && exit 0; sleep 1; done; exit 1
+      - run: node scripts/ui-check/ui-check.mjs --config ui-check.config.json --out ui-check-report
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with: { name: ui-check-preview, path: web/ui-check-report }
+  live:
+    if: github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults: { run: { working-directory: web } }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm, cache-dependency-path: web/package-lock.json }
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - run: node scripts/ui-check/ui-check.mjs --config ui-check.config.json --base-url https://www.example.com --out ui-check-report   # ← production URL
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with: { name: ui-check-live, path: web/ui-check-report }

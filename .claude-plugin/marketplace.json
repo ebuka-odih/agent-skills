@@ -5,7 +5,7 @@
   },
   "metadata": {
     "description": "Personal engineering standards as Claude Code skills, grouped by domain. Install once, follow in every project.",
-    "version": "1.5.0"
+    "version": "1.6.0"
   },
   "plugins": [
     {
@@ -75,7 +75,7 @@
       "name": "frontend",
       "source": "./plugins/frontend",
       "description": "Consistent shadcn + Tailwind dashboards: token-based UI system, component layers, dashboard patterns, consistency reviews, component/visual/a11y testing, performance budgets; hook flags values that bypass design tokens.",
-      "version": "0.1.2",
+      "version": "0.2.0",
       "category": "development"
     },
     {

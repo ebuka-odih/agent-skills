@@ -72,7 +72,7 @@ flowchart LR
 | `code-standards` | ✅ 0.1 | `writing-code` (orchestrator) · `structure-and-naming` · `error-handling` · `testing` · `refactoring` + leftover-scan hook |
 | `testing` | ✅ 0.1 | `test-strategy` (orchestrator) · `mutation-testing` · `property-based` · `contract-testing` · `e2e-testing` · `non-functional` (load, a11y, visual) |
 | `security` | ✅ 0.1 | `security-baseline` (orchestrator) · `secure-coding` · `threat-model` · `secrets-and-deps` · `security-audit` (→ [Cloudflare's skill](UPSTREAM.md)) + secret guard hook |
-| `frontend` | ✅ 0.1 | `ui-system` (orchestrator) · `shadcn-tailwind` · `dashboard-patterns` · `ui-consistency` · `component-testing` · `frontend-performance` + token hook |
+| `frontend` | ✅ 0.2 | `ui-system` (orchestrator) · `shadcn-tailwind` · `dashboard-patterns` · `ui-consistency` · `component-testing` · `browser-checks` · `frontend-performance` + token hook + `ui-check` runner |
 | `seo` | ✅ 0.2 | `seo-architecture` (orchestrator) · `keyword-research` · `search-console` · `page-speed` · `site-audit` · `on-page` · `structured-data` · `programmatic-seo` · `international` + built-site scanner, live crawler, Search Console and PageSpeed reports |
 | `devops` | ✅ 0.1 | `delivery-pipeline` (orchestrator) · `ci` · `environments` · `infrastructure-as-code` · `observability` · `release-and-rollback` + infra guard hook |
 | `collaboration` | ✅ 0.1 | `git-workflow` (orchestrator) · `commits` · `pull-requests` · `code-review` · `repo-setup` + git guard hook |
@@ -135,6 +135,7 @@ Consistency comes from **few decisions reused everywhere**, not careful screens:
 - **`dashboard-patterns`** covers page anatomy, TanStack Table with filters/sort/page in the URL, charts using `--chart-N`, StatCards, react-hook-form + zod, TanStack Query, and loading/empty/error states on every data view.
 - **`ui-consistency`** reviews a screen or PR for drift (tokens, spacing, duplicate components, states, formats, a11y) and fixes it at the source.
 - **`component-testing`** covers stories per state (both themes), Testing Library interactions by role, screenshots of stories, axe and MSW.
+- **`browser-checks`** adds real-browser checks to CI. `ui-check` (Playwright + axe) runs each key page at phone and desktop widths, in light and dark. It fails on serious/critical accessibility issues, pages that scroll sideways (naming the culprit element), broken images, console errors and server errors. It runs on every PR against the built app and after every deploy against the live site. Its first runs found a sideways-scrolling category page on one production site, and 2 serious accessibility violations plus sideways scrolling on another site's pricing page.
 - **`frontend-performance`** sets Web Vitals and bundle budgets, fixes waterfalls, lazy-loads heavy libraries, and virtualises big tables.
 - **`ui-scan.sh`** reports theme setup, component layers, drift counts per type with the top files, and missing tooling. On two real dashboards it found 400–1,400 raw colours and arbitrary values each, and no app-component layer.
 - **The token hook** (non-blocking) flags `bg-blue-600`, hex/rgb literals, `p-[13px]` and `style={{…}}` as they're written, and names the token to use. shadcn primitives, stories, tests, `data-[…]` variants and `var()` values are exempt.
@@ -235,13 +236,17 @@ flowchart LR
 - **Done-gate**: a Stop hook refuses to let the agent end its turn while criteria are unverified. It blocks once per attempt, so it can't loop. `AGENT_OPS_GATE=off` disables it.
 - **Session report**: `bash plugins/agent-ops/scripts/report.sh .agent-log/sessions/<file>.jsonl` lists failures, files touched, and gap signals like "claims tests pass but none ran after the last edit".
 
+## Feedback from real projects
+
+Agents working on real projects report what the skills missed. Each report becomes a general change in this repo, never per-project tooling: it's logged in [FEEDBACK.md](FEEDBACK.md), built with tests, versioned, then handed back to the project. The repo-local `improve-from-feedback` skill runs that loop.
+
 ## Testing the skills
 
 Three layers. The first two must pass before bumping a version; the third measures whether the library helps on real projects.
 
 | Layer | What it proves | Run |
 |---|---|---|
-| Script tests (573 checks) | Hooks log correctly, redact secrets, gate blocks/releases; plan parsing, ready logic, traceability | `bash plugins/agent-ops/tests/run.sh` · `bash plugins/product/tests/run.sh` · `bash plugins/ai-engineering/tests/run.sh` · `bash plugins/collaboration/tests/run.sh` · `bash plugins/code-standards/tests/run.sh` · `bash plugins/security/tests/run.sh` · `bash plugins/testing/tests/run.sh` · `bash plugins/seo/tests/run.sh` |
+| Script tests (589 checks) | Hooks log correctly, redact secrets, gate blocks/releases; plan parsing, ready logic, traceability | `bash plugins/agent-ops/tests/run.sh` · `bash plugins/product/tests/run.sh` · `bash plugins/ai-engineering/tests/run.sh` · `bash plugins/collaboration/tests/run.sh` · `bash plugins/code-standards/tests/run.sh` · `bash plugins/security/tests/run.sh` · `bash plugins/testing/tests/run.sh` · `bash plugins/seo/tests/run.sh` |
 | Skill evals | A real agent with the plugin does what SKILL.md promises, compared with the same agent without it | `cd plugins/<domain> && claude plugin eval . --allow-tools Write Edit Bash --no-publish` |
 | Project benchmark | On tasks you already shipped, replayed from the commit before the fix, the agent *with* the plugins beats the same agent *without* them. Scored by the hidden tests from your real fix, plus an LLM judge that sees your shipped diff | `tools/bench/bench.sh run` — see [tools/bench/README.md](tools/bench/README.md). Cases and results are private (gitignored) |
 

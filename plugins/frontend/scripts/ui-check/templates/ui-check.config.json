@@ -1,0 +1,14 @@
+{
+  "baseUrl": "http://localhost:4173",
+  "pages": [
+    { "name": "home", "path": "/" },
+    { "name": "listing", "path": "/ng/lagos" },
+    { "name": "detail", "path": "/place/example" }
+  ],
+  "widths": [375, 1280],
+  "themes": ["light", "dark"],
+  "themeStrategy": { "type": "class", "name": "dark" },
+  "failOn": ["serious", "critical"],
+  "screenshots": true,
+  "ignore": { "axeRules": [], "console": ["Download the React DevTools"] }
+}

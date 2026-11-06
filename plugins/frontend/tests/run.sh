@@ -96,6 +96,11 @@ else ok "zsh not installed — skipped"; fi
 
 check "no react app → message"          'mkdir -p "$TMP/none" && bash "$SCAN" "$TMP/none" | grep -q "No React app found"'
 
+echo "ui-check (node --test)"
+nt=$(node --test "$ROOT/tests/ui-check.test.mjs" 2>&1)
+np=$(sed -n 's/^ℹ pass //p' <<<"$nt"); nf=$(sed -n 's/^ℹ fail //p' <<<"$nt")
+if [ -n "$np" ] && [ "$nf" = 0 ]; then pass=$((pass + np)); printf '  ✔ %s node tests\n' "$np"
+else fail=$((fail + ${nf:-1})); printf '  ✘ ui-check node tests\n%s\n' "$(grep -E '^not ok|✖' <<<"$nt" | head -10)"; fi
 echo
 echo "$pass passed, $fail failed"
 [ "$fail" -eq 0 ]

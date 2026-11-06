@@ -26,10 +26,10 @@ Dogfooding found two planner gaps, fixed before running the rest: guard/gate/hoo
 | product | 80 |
 | security | 34 |
 | testing | 24 |
-| frontend | 51 |
+| frontend | 67 |
 | seo | 150 |
 | bench harness | 63 |
-| **Total** | **573** |
+| **Total** | **589** |
 
 ## 3. Mutation testing — do the tests catch broken guards?
 No mutation tool supports bash, so `tools/mutate-bash.sh` applies one mutation at a time (neutralise a deny/ask decision, flip a comparison, delete a rule or pattern, negate a condition, disable a redaction rule), runs that plugin's tests, and counts killed vs surviving mutants.

@@ -13,6 +13,7 @@ frontend/skills/
 ├── shadcn-tailwind/      theme setup, token rules, cva variants, cn(), what never to write
 ├── dashboard-patterns/   tables, charts, filters, forms, data states, layout
 ├── ui-consistency/       review a screen or PR for drift; fix it
+├── browser-checks/    real-browser page checks in CI: axe, sideways scroll, images, console (ui-check)
 ├── component-testing/    stories per state + screenshot + a11y + interaction tests
 └── frontend-performance/ Web Vitals, bundle budgets, code-splitting, data loading
 ```
