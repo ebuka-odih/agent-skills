@@ -1,0 +1,8 @@
+{
+  "description": "frontend: after each Edit/Write to frontend code, flag raw palette colours, colour literals, arbitrary values and inline styles that bypass design tokens (non-blocking).",
+  "hooks": {
+    "PostToolUse": [
+      { "matcher": "Edit|Write|MultiEdit", "hooks": [ { "type": "command", "command": "bash", "args": ["${CLAUDE_PLUGIN_ROOT}/scripts/ui-hook.sh"], "timeout": 10 } ] }
+    ]
+  }
+}

@@ -8,7 +8,7 @@
 # Operators (each applied to one line at a time):
 #   decision   deny/ask/block calls → no-op            (does a test notice the guard stopped guarding?)
 #   compare    -gt→-ge  -lt→-le  -eq→-ne  = "true"→= "false"  = 1 ]→= 0 ]
-#   rule       delete a `has …`/`check …`-style rule line or a pattern table entry
+#   rule       delete a guard rule, pattern-table entry, awk detection rule, or neutralise an exported regex
 #   negate     `grep -q` → `! grep -q` on condition lines
 # Survivors are listed with line numbers; equivalent mutants are possible — judge each one.
 set -u
@@ -65,6 +65,13 @@ for n in $(seq 1 "$lines"); do
   # redaction / substitution rules (sed -e 's/…/…/' lines)
   case "$l" in
     *"-e 's/"*) mutate_line "$n" 's/-e '"'"'s\//-e '"'"'s\/NEVER_MATCHES_/' rule ;;
+  esac
+  # awk detection rules (`if (…) print path …`) and exported pattern regexes
+  case "$l" in
+    *'if ('*') print path'*) mutate_line "$n" 's/.*/      # rule removed/' rule ;;
+  esac
+  case "$l" in
+    export\ *_RE=*) mutate_line "$n" 's/=.*/="NEVER_MATCHES_XYZ"/' rule ;;
   esac
   # negate a condition
   case "$l" in

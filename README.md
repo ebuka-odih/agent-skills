@@ -15,6 +15,7 @@ claude plugin install code-standards@ebuka-skills
 claude plugin install security@ebuka-skills
 claude plugin install testing@ebuka-skills
 claude plugin install devops@ebuka-skills
+claude plugin install frontend@ebuka-skills
 ```
 
 Working on the skills from a local clone? Run `claude plugin marketplace add ./` from the repo root instead.
@@ -70,6 +71,7 @@ flowchart LR
 | `code-standards` | ✅ 0.1 | `writing-code` (orchestrator) · `structure-and-naming` · `error-handling` · `testing` · `refactoring` + leftover-scan hook |
 | `testing` | ✅ 0.1 | `test-strategy` (orchestrator) · `mutation-testing` · `property-based` · `contract-testing` · `e2e-testing` · `non-functional` (load, a11y, visual) |
 | `security` | ✅ 0.1 | `security-baseline` (orchestrator) · `secure-coding` · `threat-model` · `secrets-and-deps` · `security-audit` (→ [Cloudflare's skill](UPSTREAM.md)) + secret guard hook |
+| `frontend` | ✅ 0.1 | `ui-system` (orchestrator) · `shadcn-tailwind` · `dashboard-patterns` · `ui-consistency` · `component-testing` · `frontend-performance` + token hook |
 | `devops` | ✅ 0.1 | `delivery-pipeline` (orchestrator) · `ci` · `environments` · `infrastructure-as-code` · `observability` · `release-and-rollback` + infra guard hook |
 | `collaboration` | ✅ 0.1 | `git-workflow` (orchestrator) · `commits` · `pull-requests` · `code-review` · `repo-setup` + git guard hook |
 
@@ -104,6 +106,19 @@ House defaults live in [`plugins/architecture/skills/system-design/references/de
 4. **`ai-evals` · `ai-safety` · `ai-ops`** cover golden sets that gate merges, prompt-injection and tool-permission controls, and a usage row plus a budget alert for every call.
 5. **`ai-learnings`** is the loop. Eval results, incidents, model swaps and spec changes become `LEARNINGS.md` entries, each with an action. Lessons seen across projects are promoted (with your approval) into `house-defaults.md`, which every new project reads first. The first defaults were seeded from two real projects (FastAPI + Pydantic AI).
 6. **Session-start hook** flags AI projects with no AI.md, spec changes since the AI design, features with no card or eval set, and lessons waiting to be promoted.
+
+## What `frontend` does — shadcn + Tailwind dashboards that stay consistent
+
+Consistency comes from **few decisions reused everywhere**, not careful screens:
+
+- **`ui-system`** sets the tokens: semantic colours via shadcn CSS variables (plus success/warning status tokens), a spacing rhythm, a type scale, radius and motion. It defines the component layers `components/ui` (shadcn primitives) → `components/app` (PageHeader, DataTable, StatCard, EmptyState…) → `features/*`, and writes `docs/ui/UI.md`.
+- **`shadcn-tailwind`** covers `:root`/`.dark`/`@theme inline` theming, adding colours the shadcn way, `cn()`, cva variants, and the classes feature code never contains.
+- **`dashboard-patterns`** covers page anatomy, TanStack Table with filters/sort/page in the URL, charts using `--chart-N`, StatCards, react-hook-form + zod, TanStack Query, and loading/empty/error states on every data view.
+- **`ui-consistency`** reviews a screen or PR for drift (tokens, spacing, duplicate components, states, formats, a11y) and fixes it at the source.
+- **`component-testing`** covers stories per state (both themes), Testing Library interactions by role, screenshots of stories, axe and MSW.
+- **`frontend-performance`** sets Web Vitals and bundle budgets, fixes waterfalls, lazy-loads heavy libraries, and virtualises big tables.
+- **`ui-scan.sh`** reports theme setup, component layers, drift counts per type with the top files, and missing tooling. On two real dashboards it found 400–1,400 raw colours and arbitrary values each, and no app-component layer.
+- **The token hook** (non-blocking) flags `bg-blue-600`, hex/rgb literals, `p-[13px]` and `style={{…}}` as they're written, and names the token to use. shadcn primitives, stories, tests, `data-[…]` variants and `var()` values are exempt.
 
 ## What `devops` does — PR to production, reversibly
 
@@ -191,7 +206,7 @@ Two layers. Both must pass before bumping a version.
 
 | Layer | What it proves | Run |
 |---|---|---|
-| Script tests (258 checks) | Hooks log correctly, redact secrets, gate blocks/releases; plan parsing, ready logic, traceability | `bash plugins/agent-ops/tests/run.sh` · `bash plugins/product/tests/run.sh` · `bash plugins/ai-engineering/tests/run.sh` · `bash plugins/collaboration/tests/run.sh` · `bash plugins/code-standards/tests/run.sh` · `bash plugins/security/tests/run.sh` · `bash plugins/testing/tests/run.sh` |
+| Script tests (301 checks) | Hooks log correctly, redact secrets, gate blocks/releases; plan parsing, ready logic, traceability | `bash plugins/agent-ops/tests/run.sh` · `bash plugins/product/tests/run.sh` · `bash plugins/ai-engineering/tests/run.sh` · `bash plugins/collaboration/tests/run.sh` · `bash plugins/code-standards/tests/run.sh` · `bash plugins/security/tests/run.sh` · `bash plugins/testing/tests/run.sh` |
 | Skill evals | A real agent with the plugin does what SKILL.md promises, compared with the same agent without it | `cd plugins/<domain> && claude plugin eval . --allow-tools Write Edit Bash --no-publish` |
 
 ### Latest results — 2026-11-05 (Claude Opus 5.5)
@@ -202,6 +217,9 @@ Two layers. Both must pass before bumping a version.
 | collaboration · branch-for-task | **1.0** | 0.0 | Next ready task on `feat/T4-<slug>` |
 | collaboration · commit-message | 1.0 | 1.0 | Stages only task files, Conventional subject, Refs: T4/R3 |
 | collaboration · pr-description | 1.0 | 1.0 | Body from task + requirement + goal evidence, honest Not done |
+| frontend · token-drift-fix | **1.0** | 0.75 | Adds success/warning tokens (light + dark + `@theme`) and rebuilds the badge on tokens/variants |
+| frontend · dashboard-page | 1.0 | 1.0 | Query + URL state, skeleton/empty/error, Intl money, tabular-nums, tokens only |
+| frontend · ui-review | 1.0 | 1.0 | Finds raw colours, arbitrary values, mismatched buttons, missing states, unlabeled delete |
 | devops · ci-for-fastapi | **1.0** | 0.43 | Frozen `uv sync`, ruff/mypy/pytest, audit, least-privilege permissions, concurrency |
 | devops · prod-migration-failed | **1.0** | 0.43 | Refuses `migrate:fresh` on prod; rollback, `migrate:status`, backup, forward fix |
 | devops · release-plan | 1.0 | 1.0 | Flags the non-backward-compatible rename; expand/contract, rollback, verification |
@@ -235,7 +253,7 @@ Where both arms score 1.0, the base model already knows the general advice. The 
 The first agent-ops run scored 0.3: logging worked, but the agent never chose to write a goal. That's the "said done ≠ goal" gap in practice. The fix was enforcement through hooks (`goal-nudge` + done-gate rule 2), not better wording.
 
 | Mutation testing | Tests fail when a guard rule is broken: every guard and secret pattern at 100% | `bash tools/run-all-tests.sh --mutation` |
-| Fuzz / property tests | 9 hooks never crash, always return valid JSON and a known decision, on 1,890 hostile inputs | `bash tools/fuzz-hooks.sh` |
+| Fuzz / property tests | 10 hooks never crash, always return valid JSON and a known decision, on 1,890 hostile inputs | `bash tools/fuzz-hooks.sh` |
 
 All of it, at once: `bash tools/run-all-tests.sh` (CI runs it on every push). How the testing skill was applied to this repo, and what it found: [docs/quality/TESTING.md](docs/quality/TESTING.md).
 

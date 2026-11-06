@@ -1,5 +1,7 @@
 # TypeScript / React
 
+UI look and consistency (tokens, shadcn + Tailwind, dashboard patterns, stories, visual/a11y tests) live in the **frontend** plugin — start with its `ui-system` skill and `docs/ui/UI.md`.
+
 ## Where things go
 | Thing | Location | Notes |
 |---|---|---|

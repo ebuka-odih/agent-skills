@@ -11,6 +11,7 @@ HOOKS=(
   "agent-ops/scripts/log-event.sh" "agent-ops/scripts/goal-nudge.sh" "agent-ops/scripts/done-gate.sh"
   "collaboration/scripts/git-guard.sh" "code-standards/scripts/leftover-hook.sh" "security/scripts/secret-guard.sh"
   "devops/scripts/infra-guard.sh" "product/scripts/plan-context.sh" "ai-engineering/scripts/ai-context.sh"
+  "frontend/scripts/ui-hook.sh"
 )
 PROJ="$(mktemp -d)"; trap 'rm -rf "$PROJ"' EXIT
 export CLAUDE_PROJECT_DIR="$PROJ"
@@ -21,7 +22,7 @@ PEM="-----BEGIN ""RSA PRIVATE KEY-----"
 AKEY="AK""IA""QWERTYUIOPASDFGH"
 PIECES=( 'git push --force origin main' 'git commit -m "wip"' "terraform destroy" 'rm -rf /' '$(whoami)' '`id`' '"; DROP TABLE x; --'
          '日本語テキスト' '🔥🔥' $'line1\nline2' '\\\\' "'single'" '{"nested":{"json":true}}' "$PEM" "$AKEY"
-         'php artisan migrate:fresh' 'console.log(x)' 'dd($a)' '/Users/someone/x' 'TODO later' '' ' ' '%s%n%x' '../../etc/passwd' )
+         'php artisan migrate:fresh' 'console.log(x)' 'dd($a)' '/Users/someone/x' 'TODO later' '' ' ' '%s%n%x' '../../etc/passwd' 'className="bg-blue-600 p-[13px]"' 'style={{ color: "#fff" }}' 'data-[state=open]:bg-accent' )
 EVENTS=( PreToolUse PostToolUse UserPromptSubmit Stop SessionStart SubagentStop SessionEnd Unknown )
 TOOLS=( Bash Write Edit MultiEdit Read Skill mcp__x__y "" )
 

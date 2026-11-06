@@ -2,6 +2,15 @@
 
 Each domain is one plugin. Each line under it is one skill. Orchestrator first.
 
+## ✅ frontend (0.1)
+- `ui-system` — orchestrator: tokens, layers, UI.md
+- `shadcn-tailwind` — theming, status tokens, cva, banned classes
+- `dashboard-patterns` — layout, tables, charts, forms, URL state, data states
+- `ui-consistency` — drift review checklist
+- `component-testing` — stories, interaction, visual, axe, MSW
+- `frontend-performance` — Web Vitals, bundle budgets, common fixes
+- Next: shared `packages/ui` template with the starter app components + stories
+
 ## ✅ devops (0.1)
 - `delivery-pipeline` — orchestrator: stages, gates, DELIVERY.md
 - `ci` — rules + Laravel / FastAPI / Node templates
