@@ -5,21 +5,21 @@
   },
   "metadata": {
     "description": "Personal engineering standards as Claude Code skills, grouped by domain. Install once, follow in every project.",
-    "version": "1.10.0"
+    "version": "1.11.0"
   },
   "plugins": [
     {
       "name": "product",
       "source": "./plugins/product",
-      "description": "Run a project end to end as one loop: spec with profile and risks, prototypes, plan, one task at a time, release, evolve; adopt existing codebases; loop.sh routes to only the domains a project needs.",
-      "version": "0.2.2",
+      "description": "Run a project end to end as one loop: spec with profile and risks, prototypes, plan, chat requests into tasks, one task at a time, versioned releases verified where the user looks, evolve; adopt existing codebases; loop.sh routes to only the domains a project needs.",
+      "version": "0.3.0",
       "category": "development"
     },
     {
       "name": "agent-ops",
       "source": "./plugins/agent-ops",
       "description": "Logs every agent action to .agent-log/, writes a goal contract before work, and blocks 'done' until each acceptance criterion has evidence.",
-      "version": "0.1.5",
+      "version": "0.2.0",
       "category": "development"
     },
     {
@@ -40,7 +40,7 @@
       "name": "collaboration",
       "source": "./plugins/collaboration",
       "description": "Team git workflow: branch per plan task, Conventional Commits, PRs from PLAN + GOAL evidence, labelled reviews, repo setup; hook blocks force-push to main and bad commit messages.",
-      "version": "0.1.1",
+      "version": "0.1.2",
       "category": "development"
     },
     {
@@ -68,7 +68,7 @@
       "name": "devops",
       "source": "./plugins/devops",
       "description": "Delivery pipeline PR → production: CI templates (Laravel, FastAPI, Node), environments, IaC, observability and SLOs, safe release/rollback; hook asks before destructive infra or production commands; uptime: fail with 503 not 200, health checks, monitoring; uptime-scan.sh.",
-      "version": "0.2.0",
+      "version": "0.2.1",
       "category": "development"
     },
     {

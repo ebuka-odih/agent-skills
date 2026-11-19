@@ -10,7 +10,8 @@
 | `docs/seo/SEO.md` | seo-architecture, keyword-research, search-console | on-page, programmatic-seo, site-audit |
 | `docs/security/SECURITY.md` | security-baseline, threat-model | secure-coding, code-review, security-audit |
 | `docs/ops/DELIVERY.md` | delivery-pipeline | ci, environments, release-and-rollback |
-| `docs/plan/PLAN.md` | project-plan, next-task | next-task, loop.sh, plan-context hook |
+| `docs/plan/PLAN.md` (+ `release:` policy) | project-plan, next-task (`plan.sh`), versioning (`plan.sh released`) | next-task, loop.sh, plan-context hook |
+| version file(s), `CHANGELOG.md`, tags `vX.Y.Z` | versioning (`version.sh`) | plan-context hook, release-and-rollback, the next session |
 | `.agent-log/GOAL.md` | goal-contract | verify-done, done-gate hook |
 | `docs/project/BASELINE.md` | project-loop (adopt) | evolve, milestone reviews |
 | `docs/project/LOOP.md` | every phase via `loop.sh log` | loop.sh status, the next session |

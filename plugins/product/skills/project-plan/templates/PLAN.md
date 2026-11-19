@@ -1,5 +1,6 @@
 ---
 spec_version: 1
+release: per-milestone   # per-feature | per-milestone | manual — when the versioning skill ships a build
 updated: YYYY-MM-DD
 ---
 
@@ -7,7 +8,8 @@ updated: YYYY-MM-DD
 
 Source: docs/spec/SPEC.md · Architecture: docs/architecture/ARCHITECTURE.md
 
-<!-- milestone status: planned → active → done → released (loop.sh reads these) -->
+<!-- milestone status: planned → active → done → released (loop.sh reads these).
+     No version numbers in names: `plan.sh released M1 v0.3.0` adds "released: v0.3.0 · date" under demo. -->
 ## M0 — Foundations · status: active
 goal: Code runs locally, CI passes, deploys to staging.
 demo: staging URL serves the app; CI green on main.

@@ -19,4 +19,4 @@ plugins/<domain>/skills/<skill>/references/<topic>.md   (+ templates/)
 8. **Third-party skills** go in `UPSTREAM.md` after reading every file. Prefer delegating to them over copying.
 9. **Every skill ships with evals** in `plugins/<domain>/evals/<case>/` (prompt.md + graders/). At least one case per skill: does it fire, does it produce the promised output.
 10. **Every hook script ships with tests** in `plugins/<domain>/tests/run.sh`.
-11. **Every change:** bump `version` in the plugin's `plugin.json` and its entry in `marketplace.json`, add a `CHANGELOG.md` line, run `claude plugin validate plugins/<domain>`, the domain's `tests/run.sh`, and its evals.
+11. **Every change:** `tools/release.sh apply` (bumps each changed plugin's `plugin.json` + `marketplace.json` entry + marketplace version, adds a CHANGELOG section — replace its `FILL IN` lines), run `claude plugin validate plugins/<domain>`, `tools/run-all-tests.sh` (includes `tools/release.sh check`), and the domain's evals. Commit, then `tools/release.sh tag --push`. Never edit version numbers by hand.

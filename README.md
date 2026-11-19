@@ -66,7 +66,7 @@ flowchart LR
 
 | Plugin | Status | Skills |
 |---|---|---|
-| `product` | ✅ 0.2 | `project-loop` (conductor) · `product` · `product-spec` · `prototype` · `project-plan` · `next-task` + `loop.sh` + session-start hook |
+| `product` | ✅ 0.3 | `project-loop` (conductor) · `product` · `product-spec` · `prototype` · `project-plan` · `next-task` · `versioning` + `loop.sh` · `plan.sh` · `version.sh` + session-start hook |
 | `agent-ops` | ✅ 0.1 | `agent-ops` (orchestrator) · `goal-contract` · `verify-done` · `session-report` + logging and done-gate hooks |
 | `ai-engineering` | ✅ 0.1 | `ai-design` (orchestrator) · `ai-feature` · `ai-stack` · `ai-evals` · `ai-safety` · `ai-ops` · `ai-learnings` + session-start drift hook |
 | `architecture` | ✅ 0.2 | `system-design` (orchestrator) · `repo-and-services` · `auth-design` · `data-design` · `api-design` · `adr` |
@@ -115,9 +115,10 @@ ADOPT       existing code → recover SPEC + ARCHITECTURE → BASELINE from ever
 
 1. **`product-spec`** interviews you in 3 short rounds (problem & users → journeys → limits). Each question comes with a proposed answer. It writes requirements `R1…` with priority and an `accept:` check, plus non-goals. Changes go through a change log.
 2. **`project-plan`** cuts the spec into vertical-slice milestones (each one demoable) and small tasks: `- [ ] T7 · Cancel booking · covers: R7 · depends: T5 · size: M`.
-3. **`next-task`** picks the first ready task, opens a GOAL.md linked to it (`task: T7`, `covers: R7`), builds it, verifies it, then ticks the task and writes a progress-log line.
-4. **Session-start hook** tells every new session the active milestone, the task in progress, the next ready task and blockers, so no session starts from zero.
-5. **`trace.sh`** reports project status and requirements with no task, tasks covering nothing, and tasks pointing at unknown requirements.
+3. **`next-task`** first turns chat requests into plan tasks (`plan.sh add`, one per outcome when a message asks for several things), then picks the first ready task, opens a GOAL.md linked to it (`task: T7`, `covers: R7`), builds it, verifies it, ticks the task and writes a progress-log line.
+4. **`versioning`** ships a build: the next version from the commits (`feat` → minor, `fix` → patch), every version file in sync (package.json, pyproject.toml, Cargo.toml, composer.json, Info.plist, VERSION), a CHANGELOG section, an annotated tag, then `version.sh verify` proves the copy you actually run (installed app, deployed URL, CLI) reports it. When to release is `release: per-feature | per-milestone | manual` in PLAN.md.
+5. **Session-start hook** tells every new session the active milestone, the task in progress, the next ready task, blockers, the version and unreleased commits, and whether a release is due, so no session starts from zero.
+6. **`trace.sh`** reports project status and requirements with no task, tasks covering nothing, and tasks pointing at unknown requirements.
 
 ## What `ai-engineering` does — AI features that keep learning
 
@@ -300,6 +301,18 @@ Four tasks, replayed from the commit before the shipped change. Scoring uses the
 ## Feedback from real projects
 
 Agents working on real projects report what the skills missed. Each report becomes a general change in this repo, never per-project tooling: it's logged in [FEEDBACK.md](FEEDBACK.md), built with tests, versioned, then handed back to the project. The repo-local `improve-from-feedback` skill runs that loop.
+
+## Versioning this library
+
+Each plugin has its own version and tag (`product-v0.3.0`); the marketplace has one too (`v1.11.0`).
+
+```bash
+tools/release.sh status          # per plugin: version, last tag, changed since, what to bump
+tools/release.sh apply           # bump changed plugins (feat → minor, fix/uncommitted → patch; override: product=minor)
+                                 # + marketplace entries + marketplace version + a CHANGELOG section to fill in
+tools/release.sh check           # runs in CI: versions agree, nothing changed without a bump, CHANGELOG filled in
+tools/release.sh tag --push      # after the commit: tag v<marketplace> and every new <plugin>-v<version>, push
+```
 
 ## Testing the skills
 

@@ -117,7 +117,7 @@ else
   if [ -n "$inprog" ]; then
     set_next "build" "product:next-task (continue)" "task in progress: $inprog — finish and verify it before starting another"
   elif [ -n "$done_ms" ]; then
-    set_next "release" "devops:release-and-rollback" "milestone $done_ms is done but not released — release through $DEL, then mark it released$( needs_seo && printf ' (and run seo:site-audit on the deployed site)')"
+    set_next "release" "product:versioning" "milestone $done_ms is done but not released — version, tag and publish it (deploy via devops:release-and-rollback and $DEL), verify the user's copy reports the new version, then plan.sh released $done_ms v<version>$( needs_seo && printf ' (and run seo:site-audit on the deployed site)')"
   elif [ -n "$ready" ]; then
     set_next "build" "product:next-task" "next ready task in $active: $ready"
   elif [ -n "$active" ] && [ "$open_in_active" -gt 0 ]; then

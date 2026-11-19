@@ -21,11 +21,18 @@ else
 fi
 
 step "plugin script tests"
-for t in plugins/*/tests/run.sh tools/bench/tests/run.sh; do
+for t in plugins/*/tests/run.sh tools/bench/tests/run.sh tools/tests/run.sh; do
   name=$(basename "$(dirname "$(dirname "$t")")")
   full=$(bash "$t" 2>&1); res=$(printf '%s\n' "$full" | tail -1)
   case "$res" in *" 0 failed") echo "ok  $name: $res" ;; *) echo "FAIL $name: $res"; printf '%s\n' "$full" | grep -A1 '✘'; failed+=("tests $name") ;; esac
 done
+
+step "versions (plugin.json = marketplace, changed plugins bumped, CHANGELOG filled in)"
+bash tools/release.sh check || failed+=("versions")
+
+step "lint: \$var right before a non-ASCII character (bash reads the bytes as part of the name)"
+hits=$(git ls-files '*.sh' | xargs perl -ne 'print "$ARGV:$.: $_" if /\$[A-Za-z_][A-Za-z0-9_]*[^\x00-\x7F]/; close ARGV if eof' 2>/dev/null)
+if [ -n "$hits" ]; then printf '%s\n' "$hits"; echo "use \${var} before → — · etc."; failed+=("lint"); else echo "ok"; fi
 
 step "hook fuzzing ($fuzz_n inputs)"
 bash tools/fuzz-hooks.sh "$fuzz_n" 42 | tail -1 | tee /dev/stderr | grep -q ' 0 property violations' || failed+=("fuzz")
@@ -49,6 +56,9 @@ plugins/seo/scripts/gsc-report.sh|bash plugins/seo/tests/run.sh
 plugins/seo/scripts/page-speed.sh|bash plugins/seo/tests/run.sh
 tools/bench/bench.sh|bash tools/bench/tests/run.sh
 plugins/product/scripts/loop.sh|bash plugins/product/tests/run.sh
+plugins/product/scripts/version.sh|bash plugins/product/tests/run.sh
+plugins/product/scripts/plan.sh|bash plugins/product/tests/run.sh
+tools/release.sh|bash tools/tests/run.sh
 plugins/backend/scripts/backend-patterns.sh|bash plugins/backend/tests/run.sh
 plugins/devops/scripts/uptime-scan.sh|bash plugins/devops/tests/run.sh
 EOF

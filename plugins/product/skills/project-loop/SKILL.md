@@ -16,7 +16,7 @@ Skills talk to each other through **files**, not memory. Each phase reads the fi
   next-task ─▶ GOAL ─▶ code (domain skills) ─▶ tests ─▶ review ─▶ PR ─▶ verify-done ─▶ tick PLAN
      │  milestone done
      ▼
-  RELEASE (delivery, release-and-rollback, site-audit) ─▶ OPERATE (observability, search-console, ai-learnings)
+  RELEASE (versioning: number → tag → publish → verify · release-and-rollback, site-audit) ─▶ OPERATE (observability, …)
      │  new request / bug / metric
      ▼
   EVOLVE: SPEC change ─▶ (prototype if risky) ─▶ PLAN tasks ─▶ back into the build loop
@@ -45,3 +45,4 @@ Routing reads `## Profile` in SPEC.md (`ui / ai / seo: yes|no`, set with the use
 - A phase is done when its exit gate passes with evidence (verify-done), not when the skill finishes talking.
 - Changes to *what* go through SPEC change control; changes to *how* through an ADR; nothing skips the build loop's tests and review.
 - One task in progress per agent; parallel agents take different ready tasks and different files.
+- Shipped means the user's copy reports the new version (`versioning` step 7), not "the release was published".

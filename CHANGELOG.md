@@ -1,5 +1,22 @@
 # Changelog
 
+## 1.11.0 — 2026-11-19
+Versioned builds and a smoother build loop, from a review of project 3: a native desktop app with 15 releases in 3 days. Versions were picked by hand, one release was never tagged and there was no CHANGELOG. The release steps lived in agent memory, milestone names carried versions that went stale, and 38 of 39 goals sat outside the plan. The stop gate blocked 6 small fixes, and three releases were published but never installed on the user's Mac.
+- `product` 0.3.0:
+  - New `versioning` skill and `version.sh`. The next version comes from Conventional Commits (feat → minor, fix → patch, breaking → major; 0.x stays 0.x). It keeps every version file in sync (package.json, pyproject.toml, Cargo.toml, composer.json, Info.plist incl. build number, VERSION) and adds a CHANGELOG section. It refuses a tag on a dirty tree or one that isn't newer. `verify --app/--url/--cmd` proves the copy the user runs reports the new version. Monorepos use `--path`/`--prefix`.
+  - `plan.sh add | mark | released | log` edits PLAN.md in its exact grammar. `next-task` step 0 turns chat requests into plan tasks first, one per outcome when a message asks for several things.
+  - The release policy (`release: per-feature | per-milestone | manual`) lives in PLAN.md front matter, not agent memory. Milestones no longer carry version numbers; `plan.sh released` records the real one and lists blocked tasks to re-check.
+  - The session-start hook adds the version, unreleased commits and "Release due". The loop routes a done milestone to `versioning`.
+  - Fixed: `trace.sh` printed nothing for dangling requirements in UTF-8 locales (`$tid→` read the arrow as part of the variable name).
+  - New evals: `versioning-release`, `request-into-plan`.
+    - First runs: `request-into-plan` scored 0.63 with the plugin (both regex graders passed; the judge hit the usage limit).
+    - `versioning-release` scored 0.00 with the plugin vs 0.56 without: the agent stopped after loading the skill. Step 2 asked to set the release policy before a first release, so it now releases when asked and offers the policy afterwards.
+    - Both cases need a rerun once the usage limit resets.
+- `agent-ops` 0.2.0: the done-gate no longer blocks the fast path. A change to 3 files or fewer, with no schema, dependency or deploy files, passes once a test command ran after the last edit. Docs-only edits pass. Anything bigger still needs GOAL.md, and the block message names the risky file.
+- `devops` 0.2.1: `release-and-rollback` takes the version and tag from `product:versioning` and verifies `/version` on production before marking a milestone released.
+- `collaboration` 0.1.2: the git-workflow release default points to `product:versioning`.
+- Repo: every plugin is now versioned and tagged (`<plugin>-vX.Y.Z`, marketplace `vX.Y.Z`; the 1.10.0 state is tagged as the baseline). `tools/release.sh status | apply | check | tag --push` replaces hand bumps. CI runs `release.sh check` with full history, plus a lint for `$var` before a non-ASCII character. 25 tests for the release tool.
+
 ## 1.10.0 — 2026-11-06
 Fixes from the first overnight benchmark, prevention and eval run (results in the README).
 - Fast path still loads the domain skill when the file is a job, worker, scheduler, migration or provider client. On the fast path, a retry-loop fix skipped `background-jobs` and missed "every failure sets the retry time" (0.42 vs 1.0). agent-ops 0.1.5, code-standards 0.1.7.

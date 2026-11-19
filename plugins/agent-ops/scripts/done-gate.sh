@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # Stop hook — refuses to let the agent end its turn when "done" can't be backed up.
 #   Rule 1: .agent-log/GOAL.md is active and has unticked criteria (not marked BLOCKED).
-#   Rule 2: the agent edited project files this turn but never wrote or touched a goal contract.
+#   Rule 2: the agent edited project files this turn without a goal contract — unless it was a small change
+#           (<= 3 files, no schema/dependency/deploy files) whose tests ran after the last edit, or docs only.
 # Blocks at most once per stop attempt (respects stop_hook_active), so it can never loop.
 set -uo pipefail
 trap 'exit 0' ERR
@@ -45,14 +46,32 @@ if [ "$(ao_goal_status "$logdir")" = "active" ]; then
 fi
 
 # Rule 2 — edits this turn with no goal contract touched this turn.
+#   Docs-only edits pass. A SMALL change (<= 3 files, nothing risky) is the fast path from goal-contract: it needs
+#   no GOAL.md, only a test command that ran after the last edit. Anything bigger or risky needs a goal.
 [ -f "$file" ] || exit 0
-read -r edits goal_touched < <(jq -rs '
+TESTS='(^|[^[:alnum:]_])(test|tests|pest|phpunit|jest|vitest|pytest|playwright|rspec|go test|cargo test|swift test|xcodebuild|dotnet test|mix test|make check)([^[:alnum:]_]|$)'
+RISKY='(^|/)(migrations?|alembic|database/schema|terraform|k8s|helm|\.github/workflows)/|(^|/)(package\.json|package-lock\.json|pnpm-lock\.yaml|yarn\.lock|composer\.(json|lock)|pyproject\.toml|poetry\.lock|uv\.lock|requirements[^/]*\.txt|Gemfile(\.lock)?|go\.(mod|sum)|Cargo\.(toml|lock)|Package\.(swift|resolved)|Dockerfile[^/]*|(docker-)?compose[^/]*\.ya?ml|\.gitlab-ci\.yml|schema\.prisma|\.env[^/]*)$|\.tf$'
+DOCS='\.(md|mdx|markdown|txt|rst|png|jpe?g|gif|svg|webp)$'
+IFS=$'\t' read -r edits goal_touched files_json test_after < <(jq -rs --arg tests "$TESTS" '
   (to_entries | map(select(.value.event=="prompt")) | last | .key // -1) as $start |
   [ .[$start+1:][] | select(.event=="tool") ] as $turn |
-  [ ($turn | map(select((.tool=="Edit" or .tool=="Write" or .tool=="NotebookEdit") and .ok and ((.summary|test("/\\.agent-log/"))|not))) | length),
-    ($turn | map(select(.summary|test("GOAL\\.md|\\.agent-log/goals"))) | length) ] | @tsv' "$file")
+  ($turn | to_entries | map(select((.value.tool=="Edit" or .value.tool=="Write" or .value.tool=="NotebookEdit") and .value.ok and ((.value.summary|test("/\\.agent-log/"))|not)))) as $ed |
+  ($ed | map(.key) | max // -1) as $lastEdit |
+  [ ($ed | length),
+    ($turn | map(select(.summary|test("GOAL\\.md|\\.agent-log/goals"))) | length),
+    ($ed | map(.value.summary) | unique | @json),
+    ($turn | to_entries | map(select(.key > $lastEdit and .value.tool=="Bash" and (.value.summary|test($tests;"i")))) | length) ] | @tsv' "$file")
 
 if [ "${edits:-0}" -gt 0 ] && [ "${goal_touched:-0}" -eq 0 ]; then
-  block "no-goal" "edited ${edits} file(s)" "You edited ${edits} project file(s) this turn without a goal contract. Load the goal-contract skill and write .agent-log/GOAL.md from the user's request (verbatim), then load verify-done and check each criterion with fresh evidence before your final message."
+  nfiles=$(jq -r 'length' <<<"$files_json")
+  code_files=$(jq -r '.[]' <<<"$files_json" | grep -viE "$DOCS" || true)
+  [ -z "$code_files" ] && exit 0                                    # docs, images: nothing to test
+  risky=$(grep -E "$RISKY" <<<"$code_files" | head -3 | tr '\n' ' ' || true)
+  if [ "$nfiles" -le 3 ] && [ -z "$risky" ]; then
+    if [ "${test_after:-0}" -gt 0 ]; then log_gate fast_path "small" "$nfiles file(s)"; exit 0; fi
+    block "fast-path-untested" "edited ${nfiles} file(s)" "Small change (fast path, no GOAL.md needed): run the tests for the module you changed now, and end with what changed plus the test command and its result. If the change grew past 3 files or touches schema, dependencies or deploy files, write a goal with the goal-contract skill instead."
+  fi
+  why="${nfiles} file(s)"; [ -n "$risky" ] && why="$why, including ${risky% }"
+  block "no-goal" "edited ${why}" "You edited ${why} this turn without a goal contract. That is past the fast path (more than 3 files, or schema/dependency/deploy files). Load the goal-contract skill and write .agent-log/GOAL.md from the user's request (verbatim), then load verify-done and check each criterion with fresh evidence before your final message."
 fi
 exit 0

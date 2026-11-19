@@ -4,7 +4,7 @@ Every change enters through the files, so it gets the same gates as the first bu
 
 | Input | First skill | Then |
 |---|---|---|
-| New feature request | `product:product-spec` change mode → new R… (+ K… if risky) | prototype if K…; ADR if it changes the architecture; `project-plan` adds tasks → build loop |
+| New feature request (in chat, often several at once) | `product:next-task` step 0: `plan.sh add` per outcome; new R… via `product-spec` change mode only when nothing covers it | prototype if risky; ADR if it changes the architecture → build loop → `versioning` per the release policy |
 | Bug report | `mattpocock-skills:diagnosing-bugs` or `code-standards` → failing test first | a task `fix: …` covering the broken R…; build loop |
 | Production incident | `devops:release-and-rollback` incident runbook | postmortem → SPEC/ADR changes → tasks |
 | Metric/SEO/AI signal (traffic drop, eval regression, slow pages) | `seo:search-console`, `ai-engineering:ai-learnings`, `seo:page-speed` | finding → requirement or NFR change → tasks |

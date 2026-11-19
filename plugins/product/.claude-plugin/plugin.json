@@ -1,7 +1,7 @@
 {
   "name": "product",
-  "version": "0.2.2",
-  "description": "Spec-driven long projects: interview the user into SPEC.md (numbered requirements), slice it into PLAN.md milestones and tasks traced to requirements, then build one task at a time and resume across sessions.",
+  "version": "0.3.0",
+  "description": "Spec-driven long projects: interview the user into SPEC.md (numbered requirements), slice it into PLAN.md milestones and tasks traced to requirements, turn chat requests into tasks, build one task at a time, and ship versioned, tagged, verified releases.",
   "author": {
     "name": "ebuka-odih"
   },

@@ -12,7 +12,7 @@
 | F6 | Plan | `product:project-plan` | everything above | `docs/plan/PLAN.md` (M0 foundations, M1…; tasks cover R…) | every must-requirement covered by a task (`trace.sh`) |
 | B0 | Small fix / tweak (fast path) | `code-standards:writing-code` fast path — one test, smallest change, module tests; no GOAL.md | the request | code + test | test fails before, passes after; module tests green |
 | B | Build loop (per task) | `product:next-task` → `agent-ops:goal-contract` → domain skills (`backend` for server code, migrations and jobs; `code-standards`, `frontend`, `ai-engineering`, `seo`, `security:secure-coding`) → `testing` → `collaboration:git-workflow/commits/pull-requests/code-review` → `agent-ops:verify-done` | PLAN, all design docs | code, tests, PR, PLAN tick + progress log | task's GOAL criteria PASS; CI green; PR reviewed |
-| R | Release 🧑 go/no-go | `devops:release-and-rollback`, `devops:environments`, `seo:site-audit` + `seo:page-speed` (public sites), `security:security-audit` (before first public launch) | DELIVERY.md, milestone | release notes, milestone `status: released` | deployed, smoke checks pass, rollback tested |
+| R | Release 🧑 go/no-go | `product:versioning` (number, CHANGELOG, tag, verify the user's copy), `devops:release-and-rollback`, `devops:environments`, `seo:site-audit` + `seo:page-speed` (public sites), `security:security-audit` (before first public launch) | DELIVERY.md, milestone | CHANGELOG section, tag `vX.Y.Z`, milestone `released: vX.Y.Z` | deployed, smoke checks pass, rollback tested, `version.sh verify` passes where the user looks |
 | O | Operate | `devops:observability`, `seo:search-console`, `ai-engineering:ai-learnings`, `ai-ops` | production signals | alerts, LEARNINGS.md, SEO.md changes log | SLOs/alerts in place; first week's signals reviewed |
 | E | Evolve | [evolve.md](evolve.md) | requests, bugs, metrics | SPEC change log → PLAN tasks | the change is a planned task with requirement IDs |
 
@@ -21,6 +21,7 @@
 |---|---|
 | Requirements covered | `bash plugins/product/scripts/trace.sh docs/spec/SPEC.md docs/plan/PLAN.md` |
 | Next step | `bash plugins/product/scripts/loop.sh next` |
+| Release | `bash plugins/product/scripts/version.sh check` · `version.sh verify --app/--url/--cmd` |
 | Task done | `agent-ops:verify-done` (GOAL.md criteria with evidence) |
 | Code quality | `code-standards` leftover-scan; `testing` test-plan.sh |
 | Security | `security` security-scan.sh; secret guard hook |

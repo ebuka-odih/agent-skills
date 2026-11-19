@@ -127,7 +127,7 @@ check "only blocked/waiting → unblock"      'lp "$P" | grep -q "^product:next-
 plan "$P" "## M0 — Foundations · status: active" "- [x] T1 · Setup · covers: setup"
 check "all tasks done → close milestone"    'lp "$P" | grep -q "^product:project-plan (close M0)"'
 plan "$P" "## M0 — Foundations · status: done" "- [x] T1 · Setup · covers: setup" "## M1 — Next · status: planned" "- [ ] T2 · X · covers: R2"
-check "done milestone → release"            'lp "$P" | grep -q "^devops:release-and-rollback — milestone M0 is done but not released"'
+check "done milestone → release"            'lp "$P" | grep -q "^product:versioning — milestone M0 is done but not released"'
 plan "$P" "## M0 — Foundations · status: released" "- [x] T1 · Setup · covers: setup" "## M1 — Next · status: planned" "- [ ] T2 · X · covers: R2"
 check "released + planned → activate"       'lp "$P" | grep -q "^product:project-plan (activate) — no active milestone — activate M1 — Next"'
 plan "$P" "## M0 — Foundations · status: released" "- [x] T1 · Setup · covers: setup"
@@ -226,8 +226,117 @@ check "log appends, status shows last"      '[ "$(grep -c "^- " "$P/docs/project
 check "bad command exits 2"                 'bash "$L" nope "$P" >/dev/null; [ $? = 2 ]'
 check "missing dir exits 2"                 'bash "$L" status "$LT/none" >/dev/null; [ $? = 2 ]'
 hook=$(cd "$P" && echo "{\"cwd\":\"$P\"}" | CLAUDE_PROJECT_DIR="$P" bash "$ROOT/scripts/plan-context.sh")
-check "session hook carries the loop step"  'jq -r .hookSpecificOutput.additionalContext <<<"$hook" | grep -q "Project loop next: devops:release-and-rollback"'
+check "session hook carries the loop step"  'jq -r .hookSpecificOutput.additionalContext <<<"$hook" | grep -q "Project loop next: product:versioning"'
 rm -rf "$LT"
+
+echo "plan.sh (requests into the plan)"
+PS="$ROOT/scripts/plan.sh"; PT="$(mktemp -d)"; PP="$PT/PLAN.md"; cp "$PLAN" "$PP"
+pl() { bash "$PS" "$@" --file "$PP"; }
+check "add → next free ID in the active milestone" '[ "$(pl add "Dark mode toggle" --covers R7)" = T8 ]'
+check "line has the exact grammar"          'grep -qx -- "- \[ \] T8 · Dark mode toggle · covers: R7 · depends: - · size: S" "$PP"'
+check "added after the last task of the milestone" '[ "$(grep -A1 "^- \[ \] T7 " "$PP" | tail -1)" = "- [ ] T8 · Dark mode toggle · covers: R7 · depends: - · size: S" ]'
+check "parser sees it in M1"                '[ "$(plan_tasks "$PP" | awk -F"\t" "\$3==\"T8\"{print \$1}")" = M1 ]'
+check "second add → T9 with depends + size" '[ "$(pl add "CSV export" --covers fix --depends T8 --size M)" = T9 ] && grep -q "T9 · CSV export · covers: fix · depends: T8 · size: M" "$PP"'
+check "add to another milestone"            '[ "$(pl add "Later" --covers R5 --milestone M0)" = T10 ] && [ "$(plan_tasks "$PP" | awk -F"\t" "\$3==\"T10\"{print \$1}")" = M0 ]'
+check "add without --covers refuses"        'pl add "x" >/dev/null 2>&1; [ $? = 2 ]'
+check "size L refuses"                      'pl add "x" --covers R1 --size L >/dev/null 2>&1; [ $? = 2 ]'
+check "title with · refuses"                'pl add "a · b" --covers R1 >/dev/null 2>&1; [ $? = 2 ]'
+check "unknown milestone refuses"           'pl add "x" --covers R1 --milestone M9 >/dev/null 2>&1; [ $? = 1 ]'
+check "updated: set to today"               'grep -q "^updated: $(date +%Y-%m-%d)$" "$PP"'
+check "mark blocked needs a note"           'pl mark T4 "!" >/dev/null 2>&1; [ $? = 2 ]'
+pl mark T4 "!" "waiting on design" >/dev/null
+check "mark blocked with note"              'grep -q "^- \[!\] T4 · .* — waiting on design$" "$PP"'
+pl mark T6 x >/dev/null
+check "unblocking drops the blocker note"   'grep -qx -- "- \[x\] T6 · Deploy to staging · covers: setup · depends: T1 · size: S" "$PP"'
+check "mark unknown task → 1"               'pl mark T99 x >/dev/null 2>&1; [ $? = 1 ]'
+check "release with open tasks refuses"     'grep -q "still has open tasks: T5 T7 T8 T9" <<<"$(pl released M1 v0.2.0 2>&1)"'
+for t in T4 T5 T7 T8 T9; do pl mark "$t" x >/dev/null; done
+pl mark T10 "!" "needs the product name" >/dev/null
+rel=$(pl released M1 v0.2.0)
+check "released → status released"          '[ "$(plan_milestones "$PP" | awk -F"\t" "\$1==\"M1\"{print \$3}")" = released ]'
+check "released: line under demo"           '[ "$(grep -A1 "^demo: add 2 candidates" "$PP" | tail -1)" = "released: v0.2.0 · $(date +%Y-%m-%d)" ]'
+check "progress log line appended last"     '[ "$(tail -1 "$PP")" = "- $(date +%Y-%m-%d) · M1 released as v0.2.0" ]'
+check "release lists blocked tasks to re-check" 'grep -q "T10 · Later — needs the product name" <<<"$rel"'
+pl released M1 v0.2.1 >/dev/null
+check "re-release replaces the released: line" '[ "$(grep -c "^released:" "$PP")" = 1 ] && grep -q "^released: v0.2.1" "$PP"'
+check "release policy defaults to per-milestone" '[ "$(pl release-policy)" = per-milestone ]'
+sed -i.bak 's/^updated:/release: per-feature   # per-feature | per-milestone | manual\nupdated:/' "$PP"
+check "release policy read from front matter" '[ "$(pl release-policy)" = per-feature ]'
+printf '# P\n\n## M1 — A · status: active\n- [ ] T1 · a · covers: R1 · depends: - · size: S\n' > "$PT/nolog.md"
+bash "$PS" log "first entry" --file "$PT/nolog.md" >/dev/null
+check "log creates ## Progress log when missing" '[ "$(grep -c "^## Progress log" "$PT/nolog.md")" = 1 ] && [ "$(tail -1 "$PT/nolog.md")" = "- $(date +%Y-%m-%d) · first entry" ]'
+check "no PLAN.md → 1"                      'bash "$PS" add x --covers R1 --file "$PT/none.md" >/dev/null 2>&1; [ $? = 1 ]'
+rm -rf "$PT"
+
+echo "version.sh"
+VS="$ROOT/scripts/version.sh"; VT="$(mktemp -d)"
+g() { git -c user.name=t -c user.email=t@t.invalid -c tag.gpgSign=false "$@"; }
+vs() { (cd "$VT" && bash "$VS" "$@"); }
+(cd "$VT" && git init -q && mkdir -p App Tests/X \
+  && printf '{\n  "name": "x",\n  "version": "0.3.0",\n  "deps": {"a": {"version": "9.9.9"}}\n}\n' > package.json \
+  && printf '<plist><dict>\n<key>CFBundleShortVersionString</key>\n\t<string>0.3.0</string>\n<key>CFBundleVersion</key>\n\t<string>12</string>\n</dict></plist>\n' > App/Info.plist \
+  && cp App/Info.plist Tests/X/Info.plist \
+  && printf '# Changelog\n\nIntro.\n\n## 0.3.0 — 2026-11-01\n- first\n' > CHANGELOG.md \
+  && g add -A && g commit -qm "feat: first" && g tag -a v0.3.0 -m v0.3.0)
+check "detects package.json then Info.plist (not Tests/)" '[ "$(vs files | tr "\n" " ")" = "package.json App/Info.plist " ]'
+check "current from the primary file"       '[ "$(vs current)" = 0.3.0 ]'
+check "last tag"                            '[ "$(vs last-tag)" = v0.3.0 ]'
+check "nothing since the tag → next exits 3" 'vs next >/dev/null; [ $? = 3 ]'
+check "status says nothing unreleased"      'vs status | grep -q "nothing unreleased"'
+check "check passes on a clean release"     'vs check | grep -q "✔ version 0.3.0 consistent (v0.3.0)"'
+(cd "$VT" && echo a > a && g add a && g commit -qm "fix(ui): button alignment")
+check "fix only → patch"                    '[ "$(vs next)" = 0.3.1 ]'
+(cd "$VT" && echo b > b && g add b && g commit -qm "feat(recorder): phone recording")
+check "feat → minor"                        '[ "$(vs next)" = 0.4.0 ]'
+check "status counts unreleased commits"    'vs status | grep -q "2 unreleased commit(s) (1 feat, 0 breaking, 1 other) → next 0.4.0"'
+check "explicit level wins"                 '[ "$(vs next patch)" = 0.3.1 ] && [ "$(vs next 2.0.0)" = 2.0.0 ]'
+(cd "$VT" && echo c > c && g add c && g commit -qm "refactor!: drop the old format")
+check "breaking at 0.x → minor, not 1.0"    '[ "$(vs next)" = 0.4.0 ]'
+check "--path limits commits to a folder"   '(cd "$VT" && mkdir -p sub && echo s > sub/s && g add sub && g commit -qm "fix: sub only"); [ "$(vs next --path sub)" = 0.3.1 ]'
+check "bump prints the new version"         '[ "$(vs bump)" = 0.4.0 ]'
+check "bump wrote package.json (first version key only)" 'grep -q "\"version\": \"0.4.0\"" "$VT/package.json" && grep -q "\"version\": \"9.9.9\"" "$VT/package.json"'
+check "bump wrote Info.plist short version" '[ "$(sed -n 3p "$VT/App/Info.plist")" = "	<string>0.4.0</string>" ]'
+check "integer build number +1"             'grep -q "<string>13</string>" "$VT/App/Info.plist"'
+check "Tests/ plist untouched"              'grep -q "<string>0.3.0</string>" "$VT/Tests/X/Info.plist"'
+check "CHANGELOG section above the newest, intro kept" '[ "$(grep -n "^## " "$VT/CHANGELOG.md" | head -1)" = "5:## 0.4.0 — $(date +%Y-%m-%d)" ] && grep -q "^Intro.$" "$VT/CHANGELOG.md"'
+check "CHANGELOG groups Breaking/Features/Fixes" 'grep -A1 "^### Breaking" "$VT/CHANGELOG.md" | grep -q "drop the old format" && grep -A1 "^### Features" "$VT/CHANGELOG.md" | grep -q "^- phone recording (recorder)$" && grep -A3 "^### Fixes" "$VT/CHANGELOG.md" | grep -q "^- button alignment (ui)$"'
+check "status: bumped but not tagged"       'vs status | grep -q "0.4.0 is bumped but not tagged yet"'
+check "next keeps a prepared bump"          '[ "$(vs next)" = 0.4.0 ]'
+check "second bump doesn't duplicate the section" 'vs bump >/dev/null; [ "$(grep -c "^## 0.4.0" "$VT/CHANGELOG.md")" = 1 ]'
+check "tag refuses a dirty tree"            'vs tag >/dev/null 2>&1; [ $? = 1 ]'
+(cd "$VT" && g add -A && g commit -qm "chore(release): v0.4.0")
+check "tag creates v0.4.0"                  '[ "$(cd "$VT" && g tag -l v0.4.0)" = "" ] && (cd "$VT" && bash "$VS" tag >/dev/null) && [ "$(cd "$VT" && git tag -l v0.4.0)" = v0.4.0 ]'
+check "tag again refuses"                   'vs tag >/dev/null 2>&1; [ $? = 1 ]'
+check "release commits don't count as unreleased" 'vs status | grep -q "nothing unreleased"'
+check "verify: old build reported"          'grep -q "reports 0.3.0, expected 0.4.0" <<<"$(vs verify --cmd "echo App 0.3.0")"'
+check "verify fails with exit 1"            'vs verify --cmd "echo App 0.3.0" >/dev/null; [ $? = 1 ]'
+check "verify: current build passes"        'vs verify --cmd "echo v0.4.0" | grep -q "✔"'
+mkdir -p "$VT/Fake.app/Contents"; cp "$VT/App/Info.plist" "$VT/Fake.app/Contents/Info.plist"
+check "verify --app reads the bundle"       'vs verify --app "$VT/Fake.app" | grep -q "✔ .*reports 0.4.0"'
+printf '{"version": "0.3.9"}\n' > "$VT/package.json"
+check "check: files disagree → 1"           'grep -q "App/Info.plist says 0.4.0, primary says 0.3.9" <<<"$(vs check)"; vs check >/dev/null; [ $? = 1 ]'
+check "check: behind the last tag"          'grep -q "behind the last tag v0.4.0" <<<"$(vs check)"'
+printf '0.5.0\n' > "$VT/VERSION"
+check "VERSION_FILES env picks the files"    '[ "$(cd "$VT" && VERSION_FILES="VERSION" bash "$VS" current)" = 0.5.0 ]'
+check "--file overrides detection"          '[ "$(vs current --file VERSION)" = 0.5.0 ]'
+check "check: CHANGELOG missing the section" 'grep -q "no section for 0.5.0" <<<"$(vs check --file VERSION)"'
+check "pyproject [project] version"         'printf "[tool.x]\nversion = \"9\"\n[project]\nname = \"a\"\nversion = \"1.2.3\"\n" > "$VT/pyproject.toml"; [ "$(vs current --file pyproject.toml)" = 1.2.3 ]'
+check "pyproject bump writes [project] only" 'vs bump 1.3.0 --file pyproject.toml >/dev/null; grep -q "^version = \"9\"" "$VT/pyproject.toml" && grep -q "^version = \"1.3.0\"" "$VT/pyproject.toml"'
+check "prefix tags for monorepos"           '(cd "$VT" && g tag -a api-v2.0.0 -m x); [ "$(vs last-tag --prefix api-)" = api-v2.0.0 ] && [ "$(vs last-tag)" = v0.4.0 ]'
+check "no version file → status says so"    'mkdir -p "$VT/empty" && (cd "$VT/empty" && bash "$VS" status) | grep -q "no version file"'
+rm -rf "$VT"
+
+echo "session hook: version + release due"
+HT="$(mktemp -d)"; mkdir -p "$HT/docs/spec" "$HT/docs/plan"; cp "$SPEC" "$HT/docs/spec/"; cp "$PLAN" "$HT/docs/plan/"
+(cd "$HT" && git init -q && echo '{"version": "0.2.0"}' > package.json && g add -A && g commit -qm "feat: x" && g tag -a v0.2.0 -m x && echo y > y && g add y && g commit -qm "feat: y")
+hctx() { echo '{}' | CLAUDE_PROJECT_DIR="$HT" bash "$ROOT/scripts/plan-context.sh" | jq -r .hookSpecificOutput.additionalContext; }
+check "hook shows the version line"         'hctx | grep -q "Version: 0.2.0 (package.json) · last tag v0.2.0 · 1 unreleased commit(s)"'
+check "per-milestone: done milestone → release due" 'hctx | grep -q "Release due: milestone M0 is done but not released"'
+sed -i.bak 's/^## M0 — Foundations · status: done/## M0 — Foundations · status: released/' "$HT/docs/plan/PLAN.md"
+check "released milestone → nothing due"    '! hctx | grep -q "Release due"'
+sed -i.bak 's/^updated:/release: per-feature\nupdated:/' "$HT/docs/plan/PLAN.md"
+check "per-feature: unreleased feat → due"  'hctx | grep -q "Release due: a feature is merged but not released"'
+rm -rf "$HT"
 echo
 echo "$pass passed, $fail failed"
 [ "$fail" -eq 0 ]

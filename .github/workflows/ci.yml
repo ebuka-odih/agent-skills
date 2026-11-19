@@ -21,6 +21,8 @@ jobs:
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0          # tags: the version check compares each plugin with its last release tag
       - name: Script tests + fuzz
         run: bash tools/run-all-tests.sh --fuzz 100
       - name: Repo security self-scan

@@ -61,7 +61,7 @@ while IFS=$'\t' read -r ms mark tid title covers deps note; do
   IFS=',' read -ra cs <<<"$covers"
   for c in "${cs[@]}"; do
     case "$c" in setup|-|"") continue ;; esac
-    grep -q "^$c"$'\t' <<<"$reqs" || dangling="$dangling $tid→$c"
+    grep -q "^$c"$'\t' <<<"$reqs" || dangling="$dangling ${tid}→${c}"
   done
 done <<<"$tasks"
 echo "- tasks pointing at unknown requirements:${dangling:- none}"

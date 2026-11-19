@@ -6,6 +6,7 @@ description: Ship to production so any release can be undone in minutes — depl
 # Release and rollback
 
 ## Before a release
+0. The version number, CHANGELOG and tag come from `product:versioning` (`version.sh bump` → `tag`); this skill covers how the build reaches production safely.
 1. Fill [templates/RELEASE.md](templates/RELEASE.md) for anything beyond a routine deploy: what changes, migrations, flags, risk, **rollback steps**, verification.
 2. Migrations follow expand → migrate → contract ([references/migrations.md](references/migrations.md)): the previous app version must still work after this release's migrations run.
 3. Risky behaviour ships dark behind a feature flag; turn on gradually.
@@ -29,4 +30,4 @@ Follow [references/incident.md](references/incident.md). Order: **stop the bleed
 - Deploys need the user's go-ahead; agents prepare, humans approve.
 
 ## Hand-off (project loop)
-After a milestone ships and smoke checks pass, set its line in `docs/plan/PLAN.md` to `status: released` and log it: `bash <product plugin>/scripts/loop.sh log release "M<n> released · next: operate/evolve"`. The loop then moves the project to operate/evolve.
+After a milestone ships, smoke checks pass and `version.sh verify --url <prod>/version` reports the new version, record it with `plan.sh released M<n> v<version>` (product plugin) and log it: `bash <product plugin>/scripts/loop.sh log release "M<n> released · next: operate/evolve"`. The loop then moves the project to operate/evolve.

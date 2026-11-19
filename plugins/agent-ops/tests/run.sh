@@ -104,7 +104,33 @@ rm -f "$PROJ/.agent-log/GOAL.md"
 send '{"hook_event_name":"UserPromptSubmit","session_id":"'$SID'","cwd":"'$PROJ'","prompt":"rename a var"}' "$LOG"
 send '{"hook_event_name":"PostToolUse","session_id":"'$SID'","cwd":"'$PROJ'","tool_name":"Edit","tool_input":{"file_path":"/p/app.js"},"tool_response":{"success":true}}' "$LOG"
 out=$(send '{"hook_event_name":"Stop","session_id":"'$SID'","cwd":"'$PROJ'","stop_hook_active":false}' "$GATE")
-check "edit with no goal → blocks"           'jq -r .reason <<<"$out" | grep -q "without a goal contract"'
+check "small edit, no tests run → asks for tests (fast path)" 'jq -r .reason <<<"$out" | grep -q "Small change (fast path, no GOAL.md needed)"'
+check "fast-path block is not the goal block" '! jq -r .reason <<<"$out" | grep -q "without a goal contract"'
+edit() { send '{"hook_event_name":"PostToolUse","session_id":"'$SID'","cwd":"'$PROJ'","tool_name":"Edit","tool_input":{"file_path":"'"$1"'"},"tool_response":{"success":true}}' "$LOG"; }
+bashrun() { send '{"hook_event_name":"PostToolUse","session_id":"'$SID'","cwd":"'$PROJ'","tool_name":"Bash","tool_input":{"command":"'"$1"'"},"tool_response":{"exitCode":0}}' "$LOG"; }
+stop() { send '{"hook_event_name":"Stop","session_id":"'$SID'","cwd":"'$PROJ'","stop_hook_active":false}' "$GATE"; }
+turn() { send '{"hook_event_name":"UserPromptSubmit","session_id":"'$SID'","cwd":"'$PROJ'","prompt":"'"$1"'"}' "$LOG"; }
+
+turn "fix the button"; edit /p/Sources/Button.swift; bashrun "swift test --filter ButtonTests"
+check "small edit + tests after → allows"    '[ -z "$(stop)" ]'
+check "fast_path logged"                     'jq -e "select(.event==\"fast_path\")" "$(logfile)" >/dev/null'
+turn "fix again"; bashrun "npm test"; edit /p/src/a.ts
+check "tests ran BEFORE the edit → still asks" 'stop | jq -r .reason | grep -q "fast path"'
+turn "four files"; for f in a b c d; do edit "/p/src/$f.ts"; done; bashrun "npm test"
+check "4 files → needs a goal even with tests" 'stop | jq -r .reason | grep -q "without a goal contract"'
+turn "add a column"; edit /p/database/migrations/2026_add_x.php; bashrun "php artisan test"
+check "migration → needs a goal"             'stop | jq -r .reason | grep -q "including /p/database/migrations/2026_add_x.php"'
+turn "bump dep"; edit /p/package.json; bashrun "npm test"
+check "dependency manifest → needs a goal"   'stop | jq -r .reason | grep -q "without a goal contract"'
+turn "deploy tweak"; edit /p/.github/workflows/ci.yml; bashrun "npm test"
+check "CI workflow → needs a goal"           'stop | jq -r .reason | grep -q "without a goal contract"'
+turn "readme"; edit /p/README.md; edit /p/docs/a.md; edit /p/docs/b.md; edit /p/docs/c.md
+check "docs-only edits → allows"             '[ -z "$(stop)" ]'
+turn "small"; edit "/p/src/my file.ts"; bashrun "pytest -q"
+check "path with a space, tests ran → allows" '[ -z "$(stop)" ]'
+turn "again"; edit /p/src/x.ts
+send '{"hook_event_name":"UserPromptSubmit","session_id":"'$SID'","cwd":"'$PROJ'","prompt":"fix y"}' "$LOG"
+send '{"hook_event_name":"PostToolUse","session_id":"'$SID'","cwd":"'$PROJ'","tool_name":"Edit","tool_input":{"file_path":"/p/app.js"},"tool_response":{"success":true}}' "$LOG"
 send '{"hook_event_name":"PostToolUse","session_id":"'$SID'","cwd":"'$PROJ'","tool_name":"Bash","tool_input":{"command":"mv .agent-log/GOAL.md .agent-log/goals/2026-11-05-x.md"},"tool_response":{"exitCode":0}}' "$LOG"
 out=$(send '{"hook_event_name":"Stop","session_id":"'$SID'","cwd":"'$PROJ'","stop_hook_active":false}' "$GATE")
 check "goal archived this turn → allows"     '[ -z "$out" ]'

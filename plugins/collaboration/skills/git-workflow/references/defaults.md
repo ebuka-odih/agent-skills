@@ -17,4 +17,4 @@ Edit this file to change the team's rules. Project-level overrides go in the pro
 | Reviews | 1 approval; 2 for auth, payments, data migrations, infra |
 | Protected | `main`: no direct pushes, no force-push, checks required, linear history |
 | Draft PRs | Open as draft early for visibility; mark ready when verify-done passes |
-| Releases | Tag `vX.Y.Z` from `main`; changelog from Conventional Commits |
+| Releases | Tag `vX.Y.Z` from `main`; changelog from Conventional Commits — `product:versioning` (`version.sh bump` → `tag`) |

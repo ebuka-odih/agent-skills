@@ -6,7 +6,7 @@
 | M1 database, M2 API, M3 UI | M1 a member books one class and pays (DB + API + UI, minimal) |
 | Nothing usable until the end | Every milestone is demoable to a real user |
 
-Each milestone has:
+Each milestone has (no version number in the name — the order will change; the version is recorded when it ships):
 - **Goal:** one sentence a user would care about
 - **Demo:** the check that proves it (`demo: member books + pays on staging`)
 - **Covers:** the journey(s) and requirement IDs

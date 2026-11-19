@@ -33,6 +33,7 @@ Every `must` requirement is covered by a task in some milestone, or listed under
 
 ## 5. Show and confirm
 Show: milestones with goal + task count, the first 3 ready tasks, deferred requirements. Set the first milestone `status: active`.
+Ask 🧑 the release policy and write it in the front matter: `release: per-feature | per-milestone | manual` (see `../versioning/references/policy.md`).
 
 ## 6. Re-sync after a spec change
 Read the spec's newest change-log rows. For each ID: add tasks (add), re-open or add rework tasks (change), mark tasks `[-] dropped` (drop). Log under Plan changes. Re-run the trace.
@@ -42,11 +43,13 @@ Read the spec's newest change-log rows. For each ID: add tasks (add), re-open or
 Details: [references/status.md](references/status.md).
 
 ## Hard rules
+- No version numbers in milestone names ("M3 — Launch (v1.0)" goes stale when the order changes); `plan.sh released M3 vX.Y.Z` records the real one.
+- Add tasks with `bash "${CLAUDE_PLUGIN_ROOT}/scripts/plan.sh" add …` — exact grammar, next free ID.
 - Task IDs are permanent; never renumber.
 - Only `next-task` and `verify-done` change a task to `[x]`, and only with evidence.
 - A milestone is done when all its tasks are `[x]` or `[-]` **and** its demo check passes.
 
-Milestone status moves `planned → active → done → released`; `loop.sh` uses it to send a done milestone to release.
+Milestone status moves `planned → active → done → released`; `loop.sh` uses it to send a done milestone to release (the `versioning` skill).
 
 ## Hand-off (project loop)
 Skills share work through files, not memory. When this skill's output is written, log it and let the loop pick the next step:

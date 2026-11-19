@@ -13,7 +13,7 @@ Project agents **use** the skills; this repo **changes** them. Feedback never be
 3. **Generalise** — write the fix so every future project benefits: which plugin, which skill, which file. Prefer a reference/decision-table line or a tested script over prose.
 4. **Prove it** — tests for scripts (+ mutation for decision logic), an eval case when it's about agent behaviour, and when the feedback came from a real fix, a bench case (`tools/bench/bench.sh new …`).
 5. **Try it on the real project, read-only** — run the new tool against the project (live URL or a temp clone) and record what it finds.
-6. **Ship** — version bump, CHANGELOG, run-all-tests, push, CI green; update installed plugins (`claude plugin marketplace update ebuka-skills` + `claude plugin update …`).
+6. **Ship** — `tools/release.sh apply` (versions + CHANGELOG section to fill in), run-all-tests, commit, `tools/release.sh tag --push`, CI green; update installed plugins (`claude plugin marketplace update ebuka-skills` + `claude plugin update …`).
 7. **Hand back** — write `.agent-log/handoffs/<project>-<topic>.md` (private): what to run, the findings, the exact commands; close the FEEDBACK.md row with the version.
 
 ## Hard rules
