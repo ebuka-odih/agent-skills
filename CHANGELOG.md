@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.11.1 — 2026-11-19
+- `product` 0.3.1: tests set a git identity so annotated tags work on CI runners without one (v1.11.0 CI failed at `version.sh tag`). Same for the repo release-tool tests.
+
 ## 1.11.0 — 2026-11-19
 Versioned builds and a smoother build loop, from a review of project 3: a native desktop app with 15 releases in 3 days. Versions were picked by hand, one release was never tagged and there was no CHANGELOG. The release steps lived in agent memory, milestone names carried versions that went stale, and 38 of 39 goals sat outside the plan. The stop gate blocked 6 small fixes, and three releases were published but never installed on the user's Mac.
 - `product` 0.3.0:

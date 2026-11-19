@@ -10,6 +10,7 @@ ok()   { pass=$((pass+1)); printf '  ✔ %s\n' "$1"; }
 bad()  { fail=$((fail+1)); printf '  ✘ %s\n    %s\n' "$1" "$2"; }
 check(){ if eval "$2"; then ok "$1"; else bad "$1" "$2"; fi; }
 
+export GIT_AUTHOR_NAME=t GIT_AUTHOR_EMAIL=t@t.invalid GIT_COMMITTER_NAME=t GIT_COMMITTER_EMAIL=t@t.invalid   # CI has no git identity; annotated tags need one
 T="$(mktemp -d)"; trap 'rm -rf "$T"' EXIT
 g() { git -C "$T" -c user.name=t -c user.email=t@t.invalid -c tag.gpgSign=false "$@"; }
 rel() { bash "$R" "$@" --root "$T"; }

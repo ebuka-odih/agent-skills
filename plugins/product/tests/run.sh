@@ -268,6 +268,7 @@ check "log creates ## Progress log when missing" '[ "$(grep -c "^## Progress log
 check "no PLAN.md → 1"                      'bash "$PS" add x --covers R1 --file "$PT/none.md" >/dev/null 2>&1; [ $? = 1 ]'
 rm -rf "$PT"
 
+export GIT_AUTHOR_NAME=t GIT_AUTHOR_EMAIL=t@t.invalid GIT_COMMITTER_NAME=t GIT_COMMITTER_EMAIL=t@t.invalid   # CI has no git identity; annotated tags need one
 echo "version.sh"
 VS="$ROOT/scripts/version.sh"; VT="$(mktemp -d)"
 g() { git -c user.name=t -c user.email=t@t.invalid -c tag.gpgSign=false "$@"; }

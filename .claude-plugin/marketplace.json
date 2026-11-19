@@ -5,14 +5,14 @@
   },
   "metadata": {
     "description": "Personal engineering standards as Claude Code skills, grouped by domain. Install once, follow in every project.",
-    "version": "1.11.0"
+    "version": "1.11.1"
   },
   "plugins": [
     {
       "name": "product",
       "source": "./plugins/product",
       "description": "Run a project end to end as one loop: spec with profile and risks, prototypes, plan, chat requests into tasks, one task at a time, versioned releases verified where the user looks, evolve; adopt existing codebases; loop.sh routes to only the domains a project needs.",
-      "version": "0.3.0",
+      "version": "0.3.1",
       "category": "development"
     },
     {
